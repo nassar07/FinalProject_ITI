@@ -42,6 +42,10 @@ namespace FinalProject_ITI.Controllers
 
                 if (result.Succeeded)
                 {
+                    if (userFromRequest.AccountType == "Customer" || userFromRequest.AccountType == "BrandOwner")
+                    {
+                        await userManager.AddToRoleAsync(user, userFromRequest.AccountType);
+                    }
                     return Ok("Created");
                 }
                 foreach (var item in result.Errors)
