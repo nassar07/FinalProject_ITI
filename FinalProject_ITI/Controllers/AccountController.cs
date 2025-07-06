@@ -22,8 +22,6 @@ namespace FinalProject_ITI.Controllers
             this.userManager = userManager;
         }
 
-
-
         [HttpPost("Register")]
         public async Task<IActionResult> Register(RegisterDTO userFromRequest)
         {
@@ -52,12 +50,8 @@ namespace FinalProject_ITI.Controllers
                 {
                     ModelState.AddModelError("Password", item.Description);
                 }
-
-                
-
             }
             return BadRequest(ModelState);
-
         }
 
         [HttpPost("Login")]
@@ -87,7 +81,6 @@ namespace FinalProject_ITI.Controllers
                             
                         }
 
-
                         SymmetricSecurityKey SignKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("hfsbvdfjknsfkns@44&&%%$$dcskln1548vkls2sdbfbdnklf554d$$##"));
 
                         SigningCredentials signingCred = new SigningCredentials(SignKey, SecurityAlgorithms.HmacSha256);
@@ -103,21 +96,16 @@ namespace FinalProject_ITI.Controllers
                         );
 
                         return Ok(
-
-                            new MyToken
-                            {
-                                token = new JwtSecurityTokenHandler().WriteToken(myToken),
-                                expiration = DateTime.Now.AddHours(1)
-                            });
+                        new MyToken
+                        {
+                            token = new JwtSecurityTokenHandler().WriteToken(myToken),
+                            expiration = DateTime.Now.AddHours(1)
+                        });
                    }
-
                 }
                 ModelState.AddModelError("Password", "Invalid Email OR Password");
-
             }
             return BadRequest(ModelState);
-
         }
-
     }
 }

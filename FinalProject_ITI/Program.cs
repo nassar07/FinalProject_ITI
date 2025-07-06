@@ -1,5 +1,6 @@
-
 using FinalProject_ITI.Models;
+using FinalProject_ITI.Repositories.Implementations;
+using FinalProject_ITI.Repositories.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,15 +14,15 @@ namespace FinalProject_ITI
 
 
             
-            builder.Services.AddDbContext<ITIContext>(options =>
+            builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("finProCS")));
 
             
             builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
-                .AddEntityFrameworkStores<ITIContext>();
+                .AddEntityFrameworkStores<AppDbContext>();
+            builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
 
-            
             builder.Services.Configure<IdentityOptions>(options =>
             {
                 options.Password.RequireDigit = true;
