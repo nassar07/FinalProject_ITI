@@ -18,8 +18,8 @@ namespace FinalProject_ITI
 
             
             builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
-                .AddEntityFrameworkStores<ITIContext>()
-                .AddDefaultTokenProviders();
+                .AddEntityFrameworkStores<ITIContext>();
+
 
             
             builder.Services.Configure<IdentityOptions>(options =>
