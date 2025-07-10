@@ -1,4 +1,5 @@
-﻿using FinalProject_ITI.Repositories.Interfaces;
+﻿using FinalProject_ITI.Models;
+using FinalProject_ITI.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace FinalProject_ITI.Repositories.Implementations;
@@ -19,5 +20,6 @@ public class Repository<T> : IRepository<T> where T : class
     public void Update(T entity) => _dbSet.Update(entity);
     public void Delete(T entity) => _dbSet.Remove(entity);
     public async Task SaveChanges() => await _context.SaveChangesAsync();
+
 }
 

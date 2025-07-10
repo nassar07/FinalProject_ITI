@@ -1,16 +1,15 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using System.Threading.Tasks;
 using FinalProject_ITI.DTO;
 using FinalProject_ITI.Models;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 
 namespace FinalProject_ITI.Controllers
 {
+    //[Authorize(Roles = "ADMIN")]
     [Route("api/[controller]")]
     [ApiController]
     public class AccountController : ControllerBase
@@ -92,7 +91,6 @@ namespace FinalProject_ITI.Controllers
                             expires: DateTime.Now.AddHours(1),
                             claims: UserClaim,
                             signingCredentials: signingCred
-                 
                         );
 
                         return Ok(
