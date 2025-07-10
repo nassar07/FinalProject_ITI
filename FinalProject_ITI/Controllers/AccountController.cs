@@ -27,38 +27,35 @@ namespace FinalProject_ITI.Controllers
         [HttpPost("Register")]
         public async Task<IActionResult> Register(RegisterDTO userFromRequest)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var user = new ApplicationUser
             {
-                ApplicationUser user = new ApplicationUser();
-                user.FirstName = userFromRequest.FirstName;
-                user.LastName = userFromRequest.LastName;
-                user.Email = userFromRequest.Email;
-                user.UserName = userFromRequest.Email;
-                user.PhoneNumber = userFromRequest.PhoneNumber;
-                user.AccountType = userFromRequest.AccountType;
+                FirstName = userFromRequest.FirstName,
+                LastName = userFromRequest.LastName,
+                Email = userFromRequest.Email,
+                UserName = userFromRequest.Email,
+                PhoneNumber = userFromRequest.PhoneNumber,
+                AccountType = userFromRequest.AccountType
+            };
 
+            IdentityResult result = await userManager.CreateAsync(user, userFromRequest.Password);
 
-                IdentityResult result = await userManager.CreateAsync(user, userFromRequest.Password);
-
-                if (result.Succeeded)
-                {
-                    if (userFromRequest.AccountType == "Customer" || userFromRequest.AccountType == "BrandOwner")
-                    {
-                        await userManager.AddToRoleAsync(user, userFromRequest.AccountType);
-                    }
-                    return Ok("Created");
-                }
-                foreach (var item in result.Errors)
-                {
-                    ModelState.AddModelError("Password", item.Description);
-                }
-
-                
-
+            if (!result.Succeeded)
+            {
+                var errors = result.Errors.Select(e => e.Description).ToList();
+                return BadRequest(errors);
             }
-            return BadRequest(ModelState);
 
+            if (userFromRequest.AccountType == "Customer" || userFromRequest.AccountType == "BrandOwner")
+            {
+                await userManager.AddToRoleAsync(user, userFromRequest.AccountType);
+            }
+
+            return Ok(new { message = "User created successfully" });
         }
+
 
         [HttpPost("Login")]
         public async Task<IActionResult> Login(LoginDTO userFromRequest)
@@ -95,7 +92,7 @@ namespace FinalProject_ITI.Controllers
                         JwtSecurityToken myToken = new JwtSecurityToken(
 
                             issuer: "http://localhost:5066/",
-                            audience:"http://localhost:5127",
+                            audience: "any",
                             expires: DateTime.Now.AddHours(1),
                             claims: UserClaim,
                             signingCredentials: signingCred
