@@ -5,10 +5,10 @@ using System.Linq.Expressions;
 
 namespace FinalProject_ITI.Repositories.Implementations;
 
-public class BrandRepository<T> : IBrandRepository<T> where T : class
+public class BazarBrandRepository<T> : IBazarBrandRepository<T> where T : class
 {
     private readonly AppDbContext _Context;
-    public BrandRepository(AppDbContext Context)
+    public BazarBrandRepository(AppDbContext Context)
     {
         _Context = Context;
     }

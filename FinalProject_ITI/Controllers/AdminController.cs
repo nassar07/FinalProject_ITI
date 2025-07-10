@@ -49,14 +49,4 @@ public class AdminController : ControllerBase
         return Ok(normalUsers);
     }
 
-    [HttpPost("AddEvent")]
-    public async Task<IActionResult> CreateEvent(Bazar Bazar)
-    {
-        if (ModelState.IsValid) {
-            await _Bazar.Add(Bazar);
-            await _Bazar.SaveChanges();
-            return Ok("Event added successfully.");
-        }
-        return BadRequest(ModelState);
-    }
 }

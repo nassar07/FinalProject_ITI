@@ -21,5 +21,9 @@ public class Repository<T> : IRepository<T> where T : class
     public void Delete(T entity) => _dbSet.Remove(entity);
     public async Task SaveChanges() => await _context.SaveChangesAsync();
 
+    public IQueryable<T> GetQuery()
+    {
+        return _dbSet.AsQueryable();
+    }
 }
 

@@ -51,14 +51,20 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
             .HasKey(bb => bb.Id); // Explicit key, not composite
 
         modelBuilder.Entity<BazarBrand>()
+            .HasIndex(bb => new { bb.BazarID, bb.BrandID })
+            .IsUnique();
+
+        modelBuilder.Entity<BazarBrand>()
             .HasOne(bb => bb.Bazar)
             .WithMany(b => b.BazarBrands)
-            .HasForeignKey(bb => bb.BazarID);
+            .HasForeignKey(bb => bb.BazarID)
+            .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<BazarBrand>()
             .HasOne(bb => bb.Brand)
-            .WithMany(br => br.BazarBrands)
-            .HasForeignKey(bb => bb.BrandID);
+            .WithMany(b => b.BazarBrands)
+            .HasForeignKey(bb => bb.BrandID)
+            .OnDelete(DeleteBehavior.Cascade);
 
         // Brand
         modelBuilder.Entity<Brand>()
