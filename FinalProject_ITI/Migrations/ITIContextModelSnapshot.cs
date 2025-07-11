@@ -685,7 +685,7 @@ namespace FinalProject_ITI.Migrations
             modelBuilder.Entity("FinalProject_ITI.Models.Product", b =>
                 {
                     b.HasOne("FinalProject_ITI.Models.Brand", "Brand")
-                        .WithMany()
+                        .WithMany("Products")
                         .HasForeignKey("BrandID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -778,6 +778,8 @@ namespace FinalProject_ITI.Migrations
             modelBuilder.Entity("FinalProject_ITI.Models.Brand", b =>
                 {
                     b.Navigation("BazarBrands");
+
+                    b.Navigation("Products");
                 });
 
             modelBuilder.Entity("FinalProject_ITI.Models.Category", b =>
