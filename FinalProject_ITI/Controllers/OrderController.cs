@@ -1,5 +1,6 @@
 ﻿using FinalProject_ITI.Models;
 using FinalProject_ITI.Repositories.Implementations;
+using FinalProject_ITI.Repositories.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FinalProject_ITI.Controllers;
@@ -8,20 +9,20 @@ namespace FinalProject_ITI.Controllers;
 [ApiController]
 public class OrderController : ControllerBase
 {
-    private readonly Repository<Order> _Order;
-    public OrderController(Repository<Order> Order)
+    private readonly IRepository<Order> _Order;
+    public OrderController(IRepository<Order> Order)
     {
         _Order = Order;
     }
 
-    [HttpGet]
+    [HttpGet("all")]
     public async Task<IActionResult> GetAllOrders()
     {
         var Orders = _Order.GetAll();
         return Ok(Orders);
     }
 
-    [HttpGet]
+    [HttpGet("{ID}")]
     public async Task<IActionResult> GetOrdersById(int ID)
     {
         var Res = await _Order.GetById(ID);
@@ -31,7 +32,7 @@ public class OrderController : ControllerBase
         return Ok(Res);
     }
 
-    [HttpPost]
+    [HttpPost("Order")]
     public async Task<IActionResult> OrderProduct(Order Order)
     {
         if (ModelState.IsValid)
@@ -45,7 +46,7 @@ public class OrderController : ControllerBase
         return BadRequest(ModelState);
     }
 
-    [HttpPut]
+    [HttpPut("update")]
     public async Task<IActionResult> UpdateOrder(Order Order)
     {
         var Res = await _Order.GetById(Order.Id);

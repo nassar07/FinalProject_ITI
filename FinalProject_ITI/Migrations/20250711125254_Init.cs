@@ -237,10 +237,10 @@ namespace FinalProject_ITI.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     OrderDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Status = table.Column<int>(type: "int", nullable: false),
                     TotalAmount = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
                     UserID = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    DeliveryBoyID = table.Column<int>(type: "int", nullable: false),
+                    DeliveryBoyID = table.Column<int>(type: "int", nullable: true),
                     OrderTypeID = table.Column<int>(type: "int", nullable: false),
                     ApplicationUserId = table.Column<string>(type: "nvarchar(450)", nullable: true)
                 },
@@ -268,8 +268,7 @@ namespace FinalProject_ITI.Migrations
                         name: "FK_Orders_deliveryBoys_DeliveryBoyID",
                         column: x => x.DeliveryBoyID,
                         principalTable: "deliveryBoys",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -485,9 +484,10 @@ namespace FinalProject_ITI.Migrations
                 filter: "[NormalizedUserName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
-                name: "IX_BazarBrands_BazarID",
+                name: "IX_BazarBrands_BazarID_BrandID",
                 table: "BazarBrands",
-                column: "BazarID");
+                columns: new[] { "BazarID", "BrandID" },
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_BazarBrands_BrandID",

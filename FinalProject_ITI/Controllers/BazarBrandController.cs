@@ -1,10 +1,12 @@
 ﻿using FinalProject_ITI.Models;
 using FinalProject_ITI.Repositories.Implementations;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace FinalProject_ITI.Controllers;
 
+[Authorize(Roles = "ADMIN")]
 [Route("api/[controller]")]
 [ApiController]
 public class BazarBrandController : ControllerBase
@@ -17,27 +19,26 @@ public class BazarBrandController : ControllerBase
         _BazarBrandRepository = BrandRepository;
     }
 
-    public async Task<IActionResult> AddBrandToBazar(int BazarId, Brand Brand) {
+    [HttpPost("AddBrandToBazar/{BazarId}/{BrandId}")]
+    public async Task<IActionResult> AddBrandToBazar(int BazarId, int BrandId) {
 
-        int brandId = Brand.Id;
-        var existed = await _BazarBrandRepository.AnyAsync(b => b.BazarID == BazarId && b.BrandID == brandId);
+        var existed = await _BazarBrandRepository.FirstOrDefaultAsync(b => b.BazarID == BazarId && b.BrandID == BrandId);
 
-        if (!existed) return BadRequest("Brand already existed in the Bazar");
+        if (existed == null) return BadRequest("Brand already existed in the Bazar");
 
-        BazarBrand NewBrand = new BazarBrand {
-        BazarID = BazarId,
-        BrandID = Brand.Id
-        };
-        await _BazarBrand.Add(NewBrand);
+        existed.BazarID = BazarId;
+        existed.BrandID = BrandId;
+
+        _BazarBrand.Update(existed);
         await _BazarBrand.SaveChanges();
 
         return Ok("Brand assigned to Bazar.");
     }
 
-    public async Task<IActionResult> RemoveBrandFromBazar(int BazarId, Brand Brand) {
+    [HttpDelete("RemoveBrandFromBazar/{BazarId}/{BrandId}")]
+    public async Task<IActionResult> RemoveBrandFromBazar(int BazarId, int BrandId) {
 
-        int brandId = Brand.Id;
-        var existed = await _BazarBrandRepository.FirstOrDefaultAsync(b => b.BazarID == BazarId && b.BrandID == brandId);
+        var existed = await _BazarBrandRepository.FirstOrDefaultAsync(b => b.BazarID == BazarId && b.BrandID == BrandId);
 
         if (existed != null) return BadRequest("Brand already existed in the Bazar");
 

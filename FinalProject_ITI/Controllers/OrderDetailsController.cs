@@ -14,13 +14,13 @@ public class OrderDetailsController : ControllerBase
         _OrderDetail = OrderDetail;
     }
 
-    [HttpGet]
+    [HttpGet("all")]
     public async Task<IActionResult> GetAllOrders() {
         var Orders = _OrderDetail.GetAll();
         return Ok(Orders);
     }
 
-    [HttpGet]
+    [HttpGet("{ID}")]
     public async Task<IActionResult> GetOrdersById(int ID)
     {
         var Res = await _OrderDetail.GetById(ID);
@@ -30,7 +30,7 @@ public class OrderDetailsController : ControllerBase
         return Ok(Res);
     }
 
-    [HttpPost]
+    [HttpPost("Order")]
     public async Task<IActionResult> OrderProduct(OrderDetail OrderDetail)
     {
         if (ModelState.IsValid) {
@@ -43,7 +43,7 @@ public class OrderDetailsController : ControllerBase
       return BadRequest(ModelState);
     }
 
-    [HttpPut]
+    [HttpPut("Update")]
     public async Task<IActionResult> UpdateOrder(OrderDetail OrderDetail)
     {
         var Order = await _OrderDetail.GetById(OrderDetail.Id);

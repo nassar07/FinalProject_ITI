@@ -132,9 +132,10 @@ namespace FinalProject_ITI.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BazarID");
-
                     b.HasIndex("BrandID");
+
+                    b.HasIndex("BazarID", "BrandID")
+                        .IsUnique();
 
                     b.ToTable("BazarBrands");
                 });
@@ -245,7 +246,7 @@ namespace FinalProject_ITI.Migrations
                     b.Property<string>("ApplicationUserId")
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<int>("DeliveryBoyID")
+                    b.Property<int?>("DeliveryBoyID")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("OrderDate")
@@ -254,9 +255,8 @@ namespace FinalProject_ITI.Migrations
                     b.Property<int>("OrderTypeID")
                         .HasColumnType("int");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
 
                     b.Property<decimal>("TotalAmount")
                         .HasPrecision(18, 2)
@@ -647,9 +647,7 @@ namespace FinalProject_ITI.Migrations
 
                     b.HasOne("FinalProject_ITI.Models.DeliveryBoy", "DeliveryBoy")
                         .WithMany("Orders")
-                        .HasForeignKey("DeliveryBoyID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("DeliveryBoyID");
 
                     b.HasOne("FinalProject_ITI.Models.OrderType", "OrderType")
                         .WithMany("Orders")
