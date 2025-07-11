@@ -95,29 +95,29 @@ namespace FinalProject_ITI.Controllers
         }
 
      
-        [AllowAnonymous]
-        [HttpGet("latest")]
-        public async Task<IActionResult> GetLatestBazaarEvent()
-        {
-            var nextBazaar = await _context.Bazars
-                  .OrderByDescending(b => b.EventDate)
-                .Select(b => new
-                {
-                    b.Id,
-                    Title = b.Title,
-                    Date = b.EventDate.ToString("MMMM dd, yyyy"),
-                    DateTime = $"{b.EventDate:dddd, MMMM dd, yyyy} • {b.StartTime} - {b.EndTime}",
-                    Location = b.Location,
-                    Entry = b.Entry,
-                    Highlights = b.Highlights.Select(h => new { h.Icon, h.Text })
-                })
-                .FirstOrDefaultAsync();
+        //[AllowAnonymous]
+        //[HttpGet("latest")]
+        //public async Task<IActionResult> GetLatestBazaarEvent()
+        //{
+        //    var nextBazaar = await _context.Bazars
+        //          .OrderByDescending(b => b.EventDate)
+        //        .Select(b => new
+        //        {
+        //            b.Id,
+        //            Title = b.Title,
+        //            Date = b.EventDate.ToString("MMMM dd, yyyy"),
+        //            DateTime = $"{b.EventDate:dddd, MMMM dd, yyyy} • {b.StartTime} - {b.EndTime}",
+        //            Location = b.Location,
+        //            Entry = b.Entry,
+        //            Highlights = b.Highlights.Select(h => new { h.Icon, h.Text })
+        //        })
+        //        .FirstOrDefaultAsync();
 
-            if (nextBazaar== null)
-                return NotFound();
+        //    if (nextBazaar== null)
+        //        return NotFound();
 
-            return Ok(nextBazaar);
-        }
+        //    return Ok(nextBazaar);
+        //}
 
     }
 }

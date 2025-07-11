@@ -17,13 +17,13 @@ namespace FinalProject_ITI.Controllers
             _context = context;
         }
 
-        [AllowAnonymous]
-        [HttpGet]
-        public async Task<IActionResult> GetActivities()
-        {
-            var activities = await _context.BazarActivities.ToListAsync();
-            return Ok(activities);
-        }
+        //[AllowAnonymous]
+        //[HttpGet]
+        //public async Task<IActionResult> GetActivities()
+        //{
+        //    var activities = await _context.BazarActivities.ToListAsync();
+        //    return Ok(activities);
+        //}
 
     }
 }
