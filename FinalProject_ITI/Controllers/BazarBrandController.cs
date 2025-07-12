@@ -72,7 +72,7 @@ public class BazarBrandController : ControllerBase
             .Select(bb => new
             {
                 bb.Bazar.Id,
-                bb.Bazar.Name
+                bb.Bazar.Title
             })
             .ToListAsync();
 
