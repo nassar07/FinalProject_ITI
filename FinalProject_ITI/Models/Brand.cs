@@ -16,8 +16,7 @@
         public ApplicationUser Owner { get; set; }
         public Subscribe Subscribe { get; set; }
 
-        public ICollection<BazarBrand> BazarBrands { get; set; }
         public ICollection<Product> Products { get; set; }
-
+        public ICollection<BazarBrand> BazarBrands { get; set; }
     }
 }
