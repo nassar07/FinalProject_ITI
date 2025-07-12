@@ -6,10 +6,10 @@ namespace FinalProject_ITI.Repositories.Implementations;
 
 public class Repository<T> : IRepository<T> where T : class
 {
-    protected readonly AppDbContext _context;
+    protected readonly ITIContext _context;
     private readonly DbSet<T> _dbSet;
 
-    public Repository(AppDbContext context)
+    public Repository(ITIContext context)
     {
         _context = context;
         _dbSet = _context.Set<T>();

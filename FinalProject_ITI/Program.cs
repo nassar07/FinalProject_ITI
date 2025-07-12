@@ -12,12 +12,12 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
         
-        builder.Services.AddDbContext<AppDbContext>(options =>
+        builder.Services.AddDbContext<ITIContext>(options =>
             options.UseSqlServer(builder.Configuration.GetConnectionString("finProCS")));
 
         
         builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
-            .AddEntityFrameworkStores<AppDbContext>();
+            .AddEntityFrameworkStores<ITIContext>();
         builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
         builder.Services.Configure<IdentityOptions>(options =>
@@ -81,11 +81,17 @@ public class Program
             app.UseSwaggerUI();
         }
 
-        app.UseAuthentication();
-        app.UseAuthorization();
+            app.UseCors(builder =>
+            {
+                builder.AllowAnyOrigin()
+                       .AllowAnyMethod()
+                       .AllowAnyHeader();
+            });
+            app.UseAuthorization();
 
-        app.MapControllers();
 
-        app.Run();
+            app.MapControllers();
+
+            app.Run();
     }
 }

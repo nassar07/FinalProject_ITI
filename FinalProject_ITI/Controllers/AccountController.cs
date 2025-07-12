@@ -7,101 +7,106 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 
-namespace FinalProject_ITI.Controllers;
-
-[Route("api/[controller]")]
-[ApiController]
-public class AccountController : ControllerBase
+namespace FinalProject_ITI.Controllers
 {
-    public UserManager<ApplicationUser> userManager { get; }
-
-    public AccountController(UserManager<ApplicationUser> userManager)
+    [Route("api/[controller]")]
+    [ApiController]
+    public class AccountController : ControllerBase
     {
-        this.userManager = userManager;
-    }
+        public UserManager<ApplicationUser> userManager { get; }
 
-    [HttpPost("Register")]
-    public async Task<IActionResult> Register(RegisterDTO userFromRequest)
-    {
-        if (ModelState.IsValid)
+        public AccountController(UserManager<ApplicationUser> userManager)
         {
-            ApplicationUser user = new ApplicationUser();
-            user.FirstName = userFromRequest.FirstName;
-            user.LastName = userFromRequest.LastName;
-            user.Email = userFromRequest.Email;
-            user.UserName = userFromRequest.Email;
-            user.PhoneNumber = userFromRequest.PhoneNumber;
-            user.AccountType = userFromRequest.AccountType;
-
-
-            IdentityResult result = await userManager.CreateAsync(user, userFromRequest.Password);
-
-            if (result.Succeeded)
-            {
-                if (userFromRequest.AccountType == "Customer" || userFromRequest.AccountType == "BrandOwner")
-                {
-                    await userManager.AddToRoleAsync(user, userFromRequest.AccountType);
-                }
-                return Ok("Created");
-            }
-            foreach (var item in result.Errors)
-            {
-                ModelState.AddModelError("Password", item.Description);
-            }
+            this.userManager = userManager;
         }
-        return BadRequest(ModelState);
-    }
 
-    [HttpPost("Login")]
-    public async Task<IActionResult> Login(LoginDTO userFromRequest)
-    {
-        if (ModelState.IsValid)
+
+
+        [HttpPost("Register")]
+        public async Task<IActionResult> Register(RegisterDTO userFromRequest)
         {
-            ApplicationUser userFromDb = await userManager.FindByEmailAsync(userFromRequest.Email);
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-            if (userFromDb != null)
+            var user = new ApplicationUser
             {
-               bool Found = await userManager.CheckPasswordAsync(userFromDb, userFromRequest.Password);
+                FirstName = userFromRequest.FirstName,
+                LastName = userFromRequest.LastName,
+                Email = userFromRequest.Email,
+                UserName = userFromRequest.Email,
+                PhoneNumber = userFromRequest.PhoneNumber,
+                AccountType = userFromRequest.AccountType
+            };
 
-               if (Found == true)
+                IdentityResult result = await userManager.CreateAsync(user, userFromRequest.Password);
+
+            if (!result.Succeeded)
+            {
+                var errors = result.Errors.Select(e => e.Description).ToList();
+                return BadRequest(errors);
+            }
+
+            if (userFromRequest.AccountType == "Customer" || userFromRequest.AccountType == "BrandOwner")
+            {
+                await userManager.AddToRoleAsync(user, userFromRequest.AccountType);
+            }
+
+            return Ok(new { message = "User created successfully" });
+        }
+
+        [HttpPost("Login")]
+        public async Task<IActionResult> Login(LoginDTO userFromRequest)
+        {
+            if (ModelState.IsValid)
+            {
+                ApplicationUser userFromDb = await userManager.FindByEmailAsync(userFromRequest.Email);
+
+                if (userFromDb != null)
                 {
+                   bool Found = await userManager.CheckPasswordAsync(userFromDb, userFromRequest.Password);
 
-                    List<Claim> UserClaim = new List<Claim>();
-
-                    UserClaim.Add(new Claim(ClaimTypes.NameIdentifier, userFromDb.Id));
-                    UserClaim.Add(new Claim(ClaimTypes.Email, userFromDb.Email));
-                    UserClaim.Add(new Claim(JwtRegisteredClaimNames.Jti , Guid.NewGuid().ToString()));
-
-                    var UserRoles = await userManager.GetRolesAsync(userFromDb);
-                    foreach (var roleName in UserRoles)
-                    { 
-                        UserClaim.Add(new Claim(ClaimTypes.Role, roleName));
-                        
-                    }
-
-                    SymmetricSecurityKey SignKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("hfsbvdfjknsfkns@44&&%%$$dcskln1548vkls2sdbfbdnklf554d$$##"));
-
-                    SigningCredentials signingCred = new SigningCredentials(SignKey, SecurityAlgorithms.HmacSha256);
-
-                    JwtSecurityToken myToken = new JwtSecurityToken(
-
-                        issuer: "http://localhost:5066/",
-                        audience:"http://localhost:5127",
-                        expires: DateTime.Now.AddHours(1),
-                        claims: UserClaim,
-                        signingCredentials: signingCred
-                    );
-
-                    return Ok(
-                    new MyToken
+                   if (Found == true)
                     {
-                        token = new JwtSecurityTokenHandler().WriteToken(myToken),
-                        expiration = DateTime.Now.AddHours(1)
-                    });
-               }
+
+                        List<Claim> UserClaim = new List<Claim>();
+
+                        UserClaim.Add(new Claim(ClaimTypes.NameIdentifier, userFromDb.Id));
+                        UserClaim.Add(new Claim(ClaimTypes.Email, userFromDb.Email));
+                        UserClaim.Add(new Claim(JwtRegisteredClaimNames.Jti , Guid.NewGuid().ToString()));
+
+                        var UserRoles = await userManager.GetRolesAsync(userFromDb);
+                        foreach (var roleName in UserRoles)
+                        { 
+                            UserClaim.Add(new Claim(ClaimTypes.Role, roleName));
+                            
+                        }
+
+                        SymmetricSecurityKey SignKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("hfsbvdfjknsfkns@44&&%%$$dcskln1548vkls2sdbfbdnklf554d$$##"));
+
+                        JwtSecurityToken myToken = new (
+                            issuer: "http://localhost:5066/",
+                            audience: "any",
+                            expires: DateTime.Now.AddHours(1),
+                            claims: UserClaim,
+                             signingCredentials: new SigningCredentials(SignKey,
+                            SecurityAlgorithms.HmacSha256)
+                        );
+
+                        return Ok(
+
+                            new MyToken
+                            {
+                                token = new JwtSecurityTokenHandler().WriteToken(myToken),
+                                expiration = DateTime.Now.AddHours(1)
+                            });
+                   }
+
+                }
+                ModelState.AddModelError("Password", "Invalid Email OR Password");
+
             }
-            ModelState.AddModelError("Password", "Invalid Email OR Password");
+            return BadRequest(ModelState);
         }
-        return BadRequest(ModelState);
+
     }
 }

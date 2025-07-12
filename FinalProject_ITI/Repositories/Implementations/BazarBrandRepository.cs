@@ -7,8 +7,8 @@ namespace FinalProject_ITI.Repositories.Implementations;
 
 public class BazarBrandRepository<T> : IBazarBrandRepository<T> where T : class
 {
-    private readonly AppDbContext _Context;
-    public BazarBrandRepository(AppDbContext Context)
+    private readonly ITIContext _Context;
+    public BazarBrandRepository(ITIContext Context)
     {
         _Context = Context;
     }

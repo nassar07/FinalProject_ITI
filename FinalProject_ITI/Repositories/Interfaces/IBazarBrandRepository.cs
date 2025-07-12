@@ -1,5 +1,4 @@
-﻿using FinalProject_ITI.Models;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 
 namespace FinalProject_ITI.Repositories.Interfaces;
 

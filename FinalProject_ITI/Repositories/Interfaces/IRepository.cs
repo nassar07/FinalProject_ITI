@@ -1,5 +1,4 @@
-﻿
-namespace FinalProject_ITI.Repositories.Interfaces;
+﻿namespace FinalProject_ITI.Repositories.Interfaces;
 
 public interface IRepository<T> where T : class
 {
