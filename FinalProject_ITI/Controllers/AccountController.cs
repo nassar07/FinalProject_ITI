@@ -83,13 +83,14 @@ namespace FinalProject_ITI.Controllers
 
                         SymmetricSecurityKey SignKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("hfsbvdfjknsfkns@44&&%%$$dcskln1548vkls2sdbfbdnklf554d$$##"));
 
+                        SigningCredentials signingCred = new SigningCredentials(SignKey, SecurityAlgorithms.HmacSha256);
+
                         JwtSecurityToken myToken = new (
                             issuer: "http://localhost:5066/",
                             audience: "any",
                             expires: DateTime.Now.AddHours(1),
                             claims: UserClaim,
-                             signingCredentials: new SigningCredentials(SignKey,
-                            SecurityAlgorithms.HmacSha256)
+                             signingCredentials: signingCred
                         );
 
                         return Ok(
