@@ -1,10 +1,8 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using System.Threading.Tasks;
 using FinalProject_ITI.DTO;
 using FinalProject_ITI.Models;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
@@ -40,7 +38,7 @@ namespace FinalProject_ITI.Controllers
                 AccountType = userFromRequest.AccountType
             };
 
-            IdentityResult result = await userManager.CreateAsync(user, userFromRequest.Password);
+                IdentityResult result = await userManager.CreateAsync(user, userFromRequest.Password);
 
             if (!result.Succeeded)
             {
@@ -55,7 +53,6 @@ namespace FinalProject_ITI.Controllers
 
             return Ok(new { message = "User created successfully" });
         }
-
 
         [HttpPost("Login")]
         public async Task<IActionResult> Login(LoginDTO userFromRequest)
@@ -84,19 +81,16 @@ namespace FinalProject_ITI.Controllers
                             
                         }
 
-
                         SymmetricSecurityKey SignKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("hfsbvdfjknsfkns@44&&%%$$dcskln1548vkls2sdbfbdnklf554d$$##"));
 
                         SigningCredentials signingCred = new SigningCredentials(SignKey, SecurityAlgorithms.HmacSha256);
 
-                        JwtSecurityToken myToken = new JwtSecurityToken(
-
+                        JwtSecurityToken myToken = new (
                             issuer: "http://localhost:5066/",
                             audience: "any",
                             expires: DateTime.Now.AddHours(1),
                             claims: UserClaim,
-                            signingCredentials: signingCred
-                 
+                             signingCredentials: signingCred
                         );
 
                         return Ok(
@@ -113,7 +107,6 @@ namespace FinalProject_ITI.Controllers
 
             }
             return BadRequest(ModelState);
-
         }
 
     }
