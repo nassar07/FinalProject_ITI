@@ -1,5 +1,6 @@
 ﻿using FinalProject_ITI.DTO;
 using FinalProject_ITI.Models;
+using FinalProject_ITI.Repositories.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -14,19 +15,20 @@ namespace FinalProject_ITI.Controllers
     public class BazaarController : ControllerBase
     {
 
-        private readonly ITIContext _context;
+        private readonly IRepository<Bazar> _bazarRepository;
 
-        public BazaarController(ITIContext context)
+        public BazaarController(IRepository<Bazar> bazarRepository)
         {
-            _context = context;
+            _bazarRepository = bazarRepository;
         }
+
 
 
 
         [HttpGet]
         public async Task<IActionResult> GetAllBazaars()
         {
-            var bazaars = await _context.Bazars.ToListAsync();
+            var bazaars = await _bazarRepository.GetAll();
             return Ok(bazaars);
         }
 
@@ -34,8 +36,8 @@ namespace FinalProject_ITI.Controllers
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetBazaarById(int id)
         {
-            var bazaar = await _context.Bazars
-                .FirstOrDefaultAsync(b => b.Id == id);
+            var bazaar = await _bazarRepository.GetById(id);
+
 
             if (bazaar == null)
                 return NotFound();
@@ -48,9 +50,7 @@ namespace FinalProject_ITI.Controllers
         [HttpPut("{id:int}")]
         public async Task<IActionResult> UpdateBazaar(int id, [FromBody] CreateBazarDTO dto)
         {
-            var existingBazaar = await _context.Bazars
-                .FirstOrDefaultAsync(b => b.Id == id);
-
+            var existingBazaar = await _bazarRepository.GetById(id);
             if (existingBazaar == null)
                 return NotFound();
 
@@ -61,7 +61,9 @@ namespace FinalProject_ITI.Controllers
             existingBazaar.Location = dto.Location;
             existingBazaar.Entry = dto.Entry;
 
-            await _context.SaveChangesAsync();
+            _bazarRepository.Update(existingBazaar);
+            await _bazarRepository.SaveChanges();
+
             return NoContent();
         }
 
@@ -82,27 +84,25 @@ namespace FinalProject_ITI.Controllers
                 EndTime = dto.EndTime,
                 Location = dto.Location,
                 Entry = dto.Entry,
-
             };
 
-            _context.Bazars.Add(bazar);
-            await _context.SaveChangesAsync();
+            await _bazarRepository.Add(bazar);
+            await _bazarRepository.SaveChanges();
 
             return CreatedAtAction(nameof(GetBazaarById), new { id = bazar.Id }, bazar);
         }
 
 
+
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> DeleteBazaar(int id)
         {
-            var bazaar = await _context.Bazars
-                .FirstOrDefaultAsync(b => b.Id == id);
-
+            var bazaar = await _bazarRepository.GetById(id);
             if (bazaar == null)
                 return NotFound();
 
-            _context.Bazars.Remove(bazaar);
-            await _context.SaveChangesAsync();
+            _bazarRepository.Delete(bazaar);
+            await _bazarRepository.SaveChanges();
 
             return NoContent();
         }
@@ -113,7 +113,7 @@ namespace FinalProject_ITI.Controllers
         [HttpGet("next-event/{id}")]
         public async Task<IActionResult> GetBazaarEventById(int id)
         {
-            var bazaar = await _context.Bazars
+            var bazaar = await _bazarRepository.GetQuery()
                 .Where(b => b.Id == id)
                 .Select(b => new
                 {
@@ -141,7 +141,7 @@ namespace FinalProject_ITI.Controllers
 
 
 
-    
+
 
 
 
