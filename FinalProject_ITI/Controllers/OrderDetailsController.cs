@@ -16,7 +16,7 @@ public class OrderDetailsController : ControllerBase
 
     [HttpGet("all")]
     public async Task<IActionResult> GetAllOrders() {
-        var Orders = _OrderDetail.GetAll();
+        var Orders = _OrderDetail.GetQuery();
         return Ok(Orders);
     }
 
