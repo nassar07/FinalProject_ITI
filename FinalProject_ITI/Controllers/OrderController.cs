@@ -1,4 +1,5 @@
-﻿using FinalProject_ITI.Models;
+﻿using FinalProject_ITI.DTO;
+using FinalProject_ITI.Models;
 using FinalProject_ITI.Repositories.Implementations;
 using FinalProject_ITI.Repositories.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -47,7 +48,7 @@ public class OrderController : ControllerBase
     }
 
     [HttpPut("update")]
-    public async Task<IActionResult> UpdateOrder(Order Order)
+    public async Task<IActionResult> UpdateOrder(OrderDTO Order)
     {
         var Res = await _Order.GetById(Order.Id);
 
@@ -57,6 +58,7 @@ public class OrderController : ControllerBase
         Res.OrderDate = Order.OrderDate;
         Res.Status = Order.Status;
         Res.TotalAmount = Order.TotalAmount;
+        Res.UserID = Order.UserID;
         Res.DeliveryBoyID = Order.DeliveryBoyID;
         Res.OrderTypeID = Order.OrderTypeID;
         Res.OrderDetails = Order.OrderDetails;

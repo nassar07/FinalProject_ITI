@@ -1,5 +1,7 @@
-﻿using FinalProject_ITI.Models;
+﻿using FinalProject_ITI.DTO;
+using FinalProject_ITI.Models;
 using FinalProject_ITI.Repositories.Implementations;
+using FinalProject_ITI.Repositories.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FinalProject_ITI.Controllers;
@@ -8,7 +10,7 @@ namespace FinalProject_ITI.Controllers;
 [ApiController]
 public class OrderDetailsController : ControllerBase
 {
-    private readonly Repository<OrderDetail> _OrderDetail;
+    private readonly IRepository<OrderDetail> _OrderDetail;
     public OrderDetailsController(Repository<OrderDetail> OrderDetail)
     {
         _OrderDetail = OrderDetail;
@@ -44,16 +46,16 @@ public class OrderDetailsController : ControllerBase
     }
 
     [HttpPut("Update")]
-    public async Task<IActionResult> UpdateOrder(OrderDetail OrderDetail)
+    public async Task<IActionResult> UpdateOrder(OrderDetailsDTO OrderDetail)
     {
         var Order = await _OrderDetail.GetById(OrderDetail.Id);
 
         if (Order == null) BadRequest("Order Doesn't exist");
 
-        Order.Id = OrderDetail.Id;
-        Order.Price = OrderDetail.Price;
         Order.Quantity = OrderDetail.Quantity;
+        Order.Price = OrderDetail.Price;
         Order.ProductID = OrderDetail.ProductID;
+        Order.OrderID = OrderDetail.OrderID;
 
         _OrderDetail.Update(Order);
         await _OrderDetail.SaveChanges();
@@ -73,6 +75,5 @@ public class OrderDetailsController : ControllerBase
 
         return BadRequest("Order Doesn't exist");
     }
-
 }
 

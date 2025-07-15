@@ -1,5 +1,6 @@
 ﻿using FinalProject_ITI.Models;
 using FinalProject_ITI.Repositories.Implementations;
+using FinalProject_ITI.Repositories.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,8 +10,8 @@ namespace FinalProject_ITI.Controllers;
 [ApiController]
 public class DeliveryOrdersController : ControllerBase
 {
-    private readonly Repository<Order> _Order;
-    private readonly Repository<DeliveryBoy> _DeliveryBoy;
+    private readonly IRepository<Order> _Order;
+    private readonly IRepository<DeliveryBoy> _DeliveryBoy;
     public DeliveryOrdersController(Repository<Order> Order, Repository<DeliveryBoy> DeliveryBoy)
     {
         _Order = Order;

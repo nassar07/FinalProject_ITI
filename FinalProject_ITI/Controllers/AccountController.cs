@@ -20,8 +20,6 @@ namespace FinalProject_ITI.Controllers
             this.userManager = userManager;
         }
 
-
-
         [HttpPost("Register")]
         public async Task<IActionResult> Register(RegisterDTO userFromRequest)
         {
