@@ -25,7 +25,7 @@ namespace FinalProject_ITI.Controllers
 
 
 
-        [HttpGet]
+        [HttpGet("GetAllBazaars")]
         public async Task<IActionResult> GetAllBazaars()
         {
             var bazaars = await _bazarRepository.GetAll();
@@ -33,7 +33,7 @@ namespace FinalProject_ITI.Controllers
         }
 
 
-        [HttpGet("{id:int}")]
+        [HttpGet("GetBazaarById/{id:int}")]
         public async Task<IActionResult> GetBazaarById(int id)
         {
             var bazaar = await _bazarRepository.GetById(id);
@@ -47,7 +47,7 @@ namespace FinalProject_ITI.Controllers
 
 
 
-        [HttpPut("{id:int}")]
+        [HttpPut("UpdateBazaar/{id:int}")]
         public async Task<IActionResult> UpdateBazaar(int id, [FromBody] CreateBazarDTO dto)
         {
             var existingBazaar = await _bazarRepository.GetById(id);
@@ -70,7 +70,7 @@ namespace FinalProject_ITI.Controllers
 
 
 
-        [HttpPost]
+        [HttpPost("CreateBazaar")]
         public async Task<IActionResult> CreateBazaar([FromBody] CreateBazarDTO dto)
         {
             if (!ModelState.IsValid)
@@ -94,7 +94,7 @@ namespace FinalProject_ITI.Controllers
 
 
 
-        [HttpDelete("{id:int}")]
+        [HttpDelete("Delete/{id:int}")]
         public async Task<IActionResult> DeleteBazaar(int id)
         {
             var bazaar = await _bazarRepository.GetById(id);
