@@ -131,7 +131,7 @@ namespace FinalProject_ITI.Controllers
 
             return Ok(bazaar);
         }
-
+//EDITABLE
 
     }
 }
