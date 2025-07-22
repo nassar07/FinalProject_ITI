@@ -1,8 +1,8 @@
 ﻿using FinalProject_ITI.DTO;
 using FinalProject_ITI.Models;
-using FinalProject_ITI.Repositories.Implementations;
 using FinalProject_ITI.Repositories.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace FinalProject_ITI.Controllers;
 
@@ -11,75 +11,131 @@ namespace FinalProject_ITI.Controllers;
 public class OrderController : ControllerBase
 {
     private readonly IRepository<Order> _Order;
-    public OrderController(IRepository<Order> Order)
+    private readonly IRepository<OrderDetail> _OrderDetail;
+    public OrderController(IRepository<Order> Order, IRepository<OrderDetail> OrderDetail)
     {
         _Order = Order;
+        _OrderDetail = OrderDetail;
     }
 
     [HttpGet("all")]
     public async Task<IActionResult> GetAllOrders()
     {
-        var Orders = _Order.GetAll();
+        var Orders = await _Order.GetAll();
         return Ok(Orders);
+    }
+
+    [HttpGet("UserOrders/{userId}")]
+    public async Task<IActionResult> GetUserOrders(string userId)
+    {
+        var orders = await _Order.GetQuery()
+            .Include(o => o.OrderDetails)
+                .ThenInclude(d => d.Product)
+            .Where(o => o.UserID == userId)
+            .ToListAsync();
+        if (orders == null) return BadRequest("there is no order");
+        return Ok(orders);
     }
 
     [HttpGet("{ID}")]
     public async Task<IActionResult> GetOrdersById(int ID)
     {
-        var Res = await _Order.GetById(ID);
+        var Res = await _Order.GetQuery()
+            .Include(o => o.OrderDetails)
+                .ThenInclude(od => od.Product)
+            .FirstOrDefaultAsync(o => o.Id == ID);
 
-        if (Res == null) BadRequest("order Doesn't exist");
+        if (Res == null) return BadRequest("order Doesn't exist");
 
         return Ok(Res);
     }
 
-    [HttpPost("Order")]
-    public async Task<IActionResult> OrderProduct(Order Order)
+    [HttpPost("CreateOrder")]
+    public async Task<IActionResult> CreateOrder(OrderDTO Order)
     {
-        if (ModelState.IsValid)
+        var NewOrder = new Order
         {
+            OrderDate = Order.OrderDate,
+            Status = Order.Status,
+            TotalAmount = Order.TotalAmount,
+            OrderTypeID = Order.OrderTypeID,
+            UserID = Order.UserID,
+            DeliveryBoyID = Order.DeliveryBoyID,
+            OrderDetails = Order.OrderDetails.Select(d => new OrderDetail
+            {
+                ProductID = d.ProductID,
+                Quantity = d.Quantity,
+                Price = d.Price
+            }).ToList()
+        };
 
-            await _Order.Add(Order);
-            await _Order.SaveChanges();
-
-            return Ok("Order Placed Successfully");
-        }
-        return BadRequest(ModelState);
+        await _Order.Add(NewOrder);
+        await _Order.SaveChanges();
+        return Ok(NewOrder);
     }
 
     [HttpPut("update")]
     public async Task<IActionResult> UpdateOrder(OrderDTO Order)
     {
-        var Res = await _Order.GetById(Order.Id);
+        var existingOrder = await _Order.GetQuery()
+            .Include(o => o.OrderDetails)
+            .FirstOrDefaultAsync(o => o.Id == Order.Id);
 
-        if (Res == null) BadRequest("Order Doesn't exist");
+        if (existingOrder == null)
+            return BadRequest("Order doesn't exist");
 
-        //map here
-        Res.OrderDate = Order.OrderDate;
-        Res.Status = Order.Status;
-        Res.TotalAmount = Order.TotalAmount;
-        Res.UserID = Order.UserID;
-        Res.DeliveryBoyID = Order.DeliveryBoyID;
-        Res.OrderTypeID = Order.OrderTypeID;
-        Res.OrderDetails = Order.OrderDetails;
+        // Update order properties
+        existingOrder.OrderDate = Order.OrderDate;
+        existingOrder.Status = Order.Status;
+        existingOrder.TotalAmount = Order.TotalAmount;
+        existingOrder.OrderTypeID = Order.OrderTypeID;
+        existingOrder.UserID = Order.UserID;
+        existingOrder.DeliveryBoyID = Order.DeliveryBoyID;
 
-        _Order.Update(Res);
+        // Handle OrderDetails
+        // 1. Remove existing order details (if full replacement)
+        foreach (var detail in existingOrder.OrderDetails)
+        {
+            _OrderDetail.Delete(detail);
+        }
+
+        // 2. Add new order details
+        existingOrder.OrderDetails = Order.OrderDetails.Select(od => new OrderDetail
+        {
+            ProductID = od.ProductID,
+            Quantity = od.Quantity,
+            Price = od.Price,
+        }).ToList();
+
+        _Order.Update(existingOrder);
+
+        await _OrderDetail.SaveChanges();
         await _Order.SaveChanges();
         return Ok("Order Updated");
     }
 
-    [HttpDelete]
+    [HttpDelete("delete")]
     public async Task<IActionResult> DeleteOrder(int ID)
     {
-        var order = await _Order.GetById(ID);
+        var order = await _Order.GetQuery()
+            .Include(o => o.OrderDetails)
+            .FirstOrDefaultAsync(o => o.Id == ID);
 
-        if (order != null)
+        if (order == null)
+            return BadRequest("Order doesn't exist");
+
+        // Remove related OrderDetails
+        foreach (var detail in order.OrderDetails)
         {
-            _Order.Delete(order);
-            await _Order.SaveChanges();
-            return Ok("Order deleted");
+            _OrderDetail.Delete(detail);
         }
 
-        return BadRequest("Order Doesn't exist");
+        // Remove the Order itself
+        _Order.Delete(order);
+
+        await _Order.SaveChanges();
+        await _OrderDetail.SaveChanges();
+
+        return Ok("Order deleted");
     }
 }

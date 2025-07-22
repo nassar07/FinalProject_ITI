@@ -1,48 +1,54 @@
 ﻿using FinalProject_ITI.Models;
 using FinalProject_ITI.Repositories.Implementations;
+using FinalProject_ITI.Repositories.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace FinalProject_ITI.Controllers;
 
-[Authorize(Roles = "ADMIN")]
+//[Authorize(Roles = "ADMIN")]
 [Route("api/[controller]")]
 [ApiController]
 public class BazarBrandController : ControllerBase
 {
-    private readonly Repository<BazarBrand> _BazarBrand;
-    private readonly BazarBrandRepository<BazarBrand> _BazarBrandRepository;
-    public BazarBrandController(Repository<BazarBrand> BazarBrand, BazarBrandRepository<BazarBrand> BrandRepository)
+    private readonly IRepository<BazarBrand> _BazarBrand;
+    private readonly IBazarBrandRepository<BazarBrand> _BazarBrandRepository;
+    public BazarBrandController(IRepository<BazarBrand> BazarBrand, IBazarBrandRepository<BazarBrand> BazarBrandRepository)
     {
         _BazarBrand = BazarBrand;
-        _BazarBrandRepository = BrandRepository;
+        _BazarBrandRepository = BazarBrandRepository;
     }
 
     [HttpPost("AddBrandToBazar/{BazarId}/{BrandId}")]
-    public async Task<IActionResult> AddBrandToBazar(int BazarId, int BrandId) {
-
+    public async Task<IActionResult> AddBrandToBazar(int BazarId, int BrandId)
+    {
         var existed = await _BazarBrandRepository.FirstOrDefaultAsync(b => b.BazarID == BazarId && b.BrandID == BrandId);
 
-        if (existed == null) return BadRequest("Brand already existed in the Bazar");
+        if (existed != null)
+            return BadRequest("Brand already exists in the Bazar.");
 
-        existed.BazarID = BazarId;
-        existed.BrandID = BrandId;
+        var newRelation = new BazarBrand
+        {
+            BazarID = BazarId,
+            BrandID = BrandId
+        };
 
-        _BazarBrand.Update(existed);
+        await _BazarBrand.Add(newRelation);
         await _BazarBrand.SaveChanges();
 
         return Ok("Brand assigned to Bazar.");
     }
 
     [HttpDelete("RemoveBrandFromBazar/{BazarId}/{BrandId}")]
-    public async Task<IActionResult> RemoveBrandFromBazar(int BazarId, int BrandId) {
-
+    public async Task<IActionResult> RemoveBrandFromBazar(int BazarId, int BrandId)
+    {
         var existed = await _BazarBrandRepository.FirstOrDefaultAsync(b => b.BazarID == BazarId && b.BrandID == BrandId);
 
-        if (existed != null) return BadRequest("Brand already existed in the Bazar");
+        if (existed == null)
+            return NotFound("Brand not found in the Bazar");
 
-         _BazarBrand.Delete(existed!);
+        _BazarBrand.Delete(existed);
         await _BazarBrand.SaveChanges();
 
         return Ok("Brand removed from Bazar.");
@@ -72,7 +78,7 @@ public class BazarBrandController : ControllerBase
             .Select(bb => new
             {
                 bb.Bazar.Id,
-                bb.Bazar.Name
+                bb.Bazar.Title
             })
             .ToListAsync();
 

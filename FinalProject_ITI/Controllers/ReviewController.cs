@@ -1,7 +1,6 @@
 ﻿using FinalProject_ITI.DTO;
 using FinalProject_ITI.Models;
 using FinalProject_ITI.Repositories.Interfaces;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FinalProject_ITI.Controllers
@@ -19,7 +18,7 @@ namespace FinalProject_ITI.Controllers
         [HttpGet("all")]
         public async Task<IActionResult> GetAllReview()
         {
-            var Review = _Review.GetAll();
+            var Review = await _Review.GetAll();
             return Ok(Review);
         }
 

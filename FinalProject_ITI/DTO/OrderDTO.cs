@@ -8,10 +8,8 @@ public class OrderDTO
     public DateTime OrderDate { get; set; }
     public OrderStatus Status { get; set; }
     public decimal TotalAmount { get; set; }
-
+    public int? OrderTypeID { get; set; }
     public string UserID { get; set; }
-    public int? DeliveryBoyID { get; set; }
-    public int OrderTypeID { get; set; }
-
-    public ICollection<OrderDetail> OrderDetails { get; set; }
+    public string? DeliveryBoyID { get; set; }
+    public ICollection<OrderDetailsDTO> OrderDetails { get; set; }
 }

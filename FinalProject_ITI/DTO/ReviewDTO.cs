@@ -1,6 +1,4 @@
-﻿using FinalProject_ITI.Models;
-
-namespace FinalProject_ITI.DTO;
+﻿namespace FinalProject_ITI.DTO;
 
 public class ReviewDTO
 {

@@ -1,123 +1,114 @@
-﻿using FinalProject_ITI.Models;
+﻿using FinalProject_ITI.DTO;
+using FinalProject_ITI.Models;
+using FinalProject_ITI.Repositories.Interfaces;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace FinalProject_ITI.Controllers
+namespace FinalProject_ITI.Controllers;
+
+//[Authorize(Roles = "Admin")]
+[Route("api/[controller]")]
+[ApiController]
+public class BazaarController : ControllerBase
 {
-    [Authorize(Roles = "Admin")]
-    [Route("api/[controller]")]
-    [ApiController]
-    public class BazaarController : ControllerBase
+    private readonly IRepository<Bazar> _bazarRepository;
+    public BazaarController(IRepository<Bazar> bazarRepository)
     {
-
-        private readonly ITIContext _context;
-
-        public BazaarController(ITIContext context)
-        {
-            _context = context;
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> GetAllBazaars()
-        {
-           
-
-            var bazars = await _context.Bazars.ToListAsync();
-            return Ok(bazars);
-        }
-
-        [HttpGet("{id:int}")]
-        public async Task<IActionResult> GetBazaarById(int id)
-        {
-            var bazar = await _context.Bazars.FindAsync(id);
-            if (bazar == null)
-                return NotFound();
-
-            return Ok(bazar);
-
-
-           
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> CreateBazaar([FromBody] Bazar bazar)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            _context.Bazars.Add(bazar);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(GetBazaarById), new { id = bazar.Id }, bazar);
-
-        }
-
-        [HttpPut("{id:int}")]
-        public async Task<IActionResult> UpdateBazaar(int id, [FromBody] Bazar bazar)
-        {
-            if (id != bazar.Id)
-                return BadRequest("not found");
-
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            _context.Entry(bazar).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!_context.Bazars.Any(b => b.Id == id))
-                    return NotFound();
-
-                throw;
-            }
-
-            return NoContent();
-        }
-
-      
-        [HttpDelete("{id:int}")]
-        public async Task<IActionResult> DeleteBazaar(int id)
-        {
-            var bazaar = await _context.Bazars.FindAsync(id);
-            if (bazaar == null)
-                return NotFound();
-
-            _context.Bazars.Remove(bazaar);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-
-     
-        //[AllowAnonymous]
-        //[HttpGet("latest")]
-        //public async Task<IActionResult> GetLatestBazaarEvent()
-        //{
-        //    var nextBazaar = await _context.Bazars
-        //          .OrderByDescending(b => b.EventDate)
-        //        .Select(b => new
-        //        {
-        //            b.Id,
-        //            Title = b.Title,
-        //            Date = b.EventDate.ToString("MMMM dd, yyyy"),
-        //            DateTime = $"{b.EventDate:dddd, MMMM dd, yyyy} • {b.StartTime} - {b.EndTime}",
-        //            Location = b.Location,
-        //            Entry = b.Entry,
-        //            Highlights = b.Highlights.Select(h => new { h.Icon, h.Text })
-        //        })
-        //        .FirstOrDefaultAsync();
-
-        //    if (nextBazaar== null)
-        //        return NotFound();
-
-        //    return Ok(nextBazaar);
-        //}
-
+        _bazarRepository = bazarRepository;
     }
+
+    [HttpGet("GetAllBazaars")]
+    public async Task<IActionResult> GetAllBazaars()
+    {
+        var bazaars = await _bazarRepository.GetAll();
+        return Ok(bazaars);
+    }
+
+    [HttpGet("GetBazaarById/{id:int}")]
+    public async Task<IActionResult> GetBazaarById(int id)
+    {
+        var bazaar = await _bazarRepository.GetById(id);
+        if (bazaar == null)
+            return NotFound();
+        return Ok(bazaar);
+    }
+
+    [HttpPut("UpdateBazaar")]
+    public async Task<IActionResult> UpdateBazaar(BazarDTO Bazar)
+    {
+        var existingBazaar = await _bazarRepository.GetById(Bazar.Id);
+        if (existingBazaar == null)
+            return NotFound();
+
+        existingBazaar.Title = Bazar.Title;
+        existingBazaar.EventDate = Bazar.EventDate;
+        existingBazaar.StartTime = Bazar.StartTime;
+        existingBazaar.EndTime = Bazar.EndTime;
+        existingBazaar.Location = Bazar.Location;
+        existingBazaar.Entry = Bazar.Entry;
+
+        _bazarRepository.Update(existingBazaar);
+        await _bazarRepository.SaveChanges();
+
+        return Ok("Updated");
+    }
+
+    [HttpPost("CreateBazaar")]
+    public async Task<IActionResult> CreateBazaar(Bazar Bazar)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+      
+        await _bazarRepository.Add(Bazar);
+        await _bazarRepository.SaveChanges();
+        return Ok(new { message = "Add new Bazar Successfully" });
+    }
+
+    [HttpDelete("Delete/{id:int}")]
+    public async Task<IActionResult> DeleteBazaar(int id)
+    {
+        var bazaar = await _bazarRepository.GetById(id);
+        if (bazaar == null)
+            return NotFound();
+        _bazarRepository.Delete(bazaar);
+        await _bazarRepository.SaveChanges();
+        return Ok("deleted");
+    }
+
+    [AllowAnonymous]
+    [HttpGet("next-event/{id}")]
+    public async Task<IActionResult> GetBazaarEventById(int id)
+    {
+        var bazaar = await _bazarRepository.GetQuery()
+            .Where(b => b.Id == id)
+            .Select(b => new
+            {
+                b.Id,
+                Title = b.Title,
+                Date = b.EventDate.ToString("MMMM dd, yyyy"),
+                DateTime = $"{b.EventDate:dddd, MMMM dd, yyyy} • {b.StartTime} - {b.EndTime}",
+                Location = b.Location,
+                Entry = b.Entry
+            })
+            .FirstOrDefaultAsync();
+        if (bazaar == null)
+            return NotFound();
+        return Ok(bazaar);
+    }
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+

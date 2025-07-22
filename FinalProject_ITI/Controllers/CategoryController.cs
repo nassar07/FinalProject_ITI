@@ -19,7 +19,7 @@ namespace FinalProject_ITI.Controllers
         [HttpGet("all")]
         public async Task<IActionResult> GetAllCategory()
         {
-            var Category = _Category.GetAll();
+            var Category = await _Category.GetAll();
             return Ok(Category);
         }
 
@@ -33,13 +33,18 @@ namespace FinalProject_ITI.Controllers
             return Ok(Res);
         }
 
-        [HttpPost("Category")]
-        public async Task<IActionResult> AddCategory(Category Category)
+        [HttpPost("add")]
+        public async Task<IActionResult> AddCategory(CategoryDTO Category)
         {
             if (ModelState.IsValid)
             {
+                var NewCategory = new Category
+                {
+                    Brands = Category.Brands,
+                    Name = Category.Name
+                };
 
-                await _Category.Add(Category);
+                await _Category.Add(NewCategory);
                 await _Category.SaveChanges();
 
                 return Ok("Category has been submitted");

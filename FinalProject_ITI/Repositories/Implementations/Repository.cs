@@ -25,5 +25,7 @@ public class Repository<T> : IRepository<T> where T : class
     {
         return _dbSet.AsQueryable();
     }
+
+    
 }
 

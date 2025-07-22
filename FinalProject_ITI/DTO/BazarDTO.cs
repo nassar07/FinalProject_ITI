@@ -1,6 +1,8 @@
-﻿namespace FinalProject_ITI.Models;
+﻿using FinalProject_ITI.Models;
 
-public class Bazar
+namespace FinalProject_ITI.DTO;
+
+public class BazarDTO
 {
     public int Id { get; set; }
     public string Title { get; set; }
