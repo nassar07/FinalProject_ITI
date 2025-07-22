@@ -3,6 +3,7 @@ using FinalProject_ITI.Repositories.Implementations;
 using FinalProject_ITI.Repositories.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Stripe;
 
 namespace FinalProject_ITI;
 
@@ -11,14 +12,16 @@ public class Program
     public static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
-        
+
+        StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
+
         builder.Services.AddDbContext<ITIContext>(options =>
             options.UseSqlServer(builder.Configuration.GetConnectionString("finProCS")));
 
-        
         builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
             .AddEntityFrameworkStores<ITIContext>();
         builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+        builder.Services.AddScoped(typeof(IBazarBrandRepository<>), typeof(BazarBrandRepository<>));
 
         builder.Services.Configure<IdentityOptions>(options =>
         {
@@ -31,8 +34,13 @@ public class Program
         });
 
         // Add services to the container.
+        builder.Services.AddControllers()
+        .AddJsonOptions(options =>
+        {
+            options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+        });
 
-        builder.Services.AddControllers();
+
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
@@ -45,7 +53,7 @@ public class Program
             var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
             var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
 
-            string[] roles = { "USER", "ADMIN"};
+            string[] roles = { "USER", "ADMIN", "DeliveryBoy" };
             foreach (var roleName in roles)
             {
                 if (!await roleManager.RoleExistsAsync(roleName))

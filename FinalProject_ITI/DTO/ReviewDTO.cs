@@ -1,6 +1,6 @@
-﻿namespace FinalProject_ITI.Models;
+﻿namespace FinalProject_ITI.DTO;
 
-public class Review
+public class ReviewDTO
 {
     public int Id { get; set; }
     public int Rating { get; set; }
@@ -8,6 +8,4 @@ public class Review
     public DateTime CreatedAt { get; set; }
     public string UserID { get; set; }
     public int ProductID { get; set; }
-    public ApplicationUser? User { get; set; }
-    public Product? Product { get; set; }
 }

@@ -2,7 +2,6 @@
 using FinalProject_ITI.Models;
 using FinalProject_ITI.Repositories.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace FinalProject_ITI.Controllers
 {
@@ -19,27 +18,9 @@ namespace FinalProject_ITI.Controllers
 
         //Get All Brands
         [HttpGet("all")]
-        public async Task<IActionResult> GetAllBrands()
-        {
-            var brands = await _brand.GetQuery()
-                .Include(b => b.Category)
-                .Include(b => b.Products)
-                    .ThenInclude(p => p.Reviews)
-                .Select(b => new BrandDto
-                {
-                    Id = b.Id,
-                    Name = b.Name,
-                    Description = b.Description,
-                    Address = b.Address,
-                    Image = b.Image,
-                    Category = b.Category.Name,
-                    ProductCount = b.Products.Count,
-                    AverageRating = b.Products.SelectMany(p => p.Reviews).Any()
-                        ? b.Products.SelectMany(p => p.Reviews).Average(r => (double?)r.Rating) ?? 0
-                        : 0
-                })
-                .ToListAsync();
+        public async Task<IActionResult> GetAllBrands() {
 
+            var brands = await _brand.GetAll();
             return Ok(brands);
         }
 
@@ -53,53 +34,42 @@ namespace FinalProject_ITI.Controllers
                 return BadRequest("Brand doesn't exist");
             }
             return Ok(res);
-
         }
 
         //Create Brand
         [HttpPost("add")]
-        public async Task<IActionResult> CreateBrand( BrandCreateDto brandDto)
+        public async Task<IActionResult> CreateBrand(Brand Brand)
         {
-            if (brandDto == null)
-            {
-                return BadRequest("Brand data is null");
+            if (ModelState.IsValid) {
+                await _brand.Add(Brand);
+                await _brand.SaveChanges();
+                return Ok("Brand added successfully");
             }
-            var brand = new Brand
-            {
-                Name = brandDto.Name,
-                Description = brandDto.Description,
-                Address = brandDto.Address,
-                Image = brandDto.Image,
-                CategoryID = brandDto.CategoryID,
-                OwnerID = brandDto.OwnerID
-            };
-            await _brand.Add(brand);
-            await _brand.SaveChanges();
-            return Ok("Brand added successfully");
+            return BadRequest(Brand);
         }
+
         //Update Brand
-        [HttpPut("update/{id}")]
-        public async Task<IActionResult> UpdateBrand(int id, BrandCreateDto brandDto)
+        [HttpPut("update")]
+        public async Task<IActionResult> UpdateBrand(BrandDTO Brand)
         {
-            if (brandDto == null)
-            {
-                return BadRequest("Brand data is null");
-            }
-            var existingBrand = await _brand.GetById(id);
-            if (existingBrand == null)
+            var existedBrand = await _brand.GetById(Brand.Id);
+            if (existedBrand == null)
             {
                 return NotFound("Brand not found");
             }
-            existingBrand.Name = brandDto.Name;
-            existingBrand.Description = brandDto.Description;
-            existingBrand.Address = brandDto.Address;
-            existingBrand.Image = brandDto.Image;
-            existingBrand.CategoryID = brandDto.CategoryID;
-            existingBrand.OwnerID = brandDto.OwnerID;
-            _brand.Update(existingBrand);
+            existedBrand.Name = Brand.Name;
+            existedBrand.Description = Brand.Description;
+            existedBrand.Address = Brand.Address;
+            existedBrand.Image = Brand.Image;
+            existedBrand.CategoryID = Brand.CategoryID;
+            existedBrand.OwnerID = Brand.OwnerID;
+            existedBrand.SubscribeID = Brand.SubscribeID;
+
+            _brand.Update(existedBrand);
             await _brand.SaveChanges();
             return Ok("Brand updated successfully");
         }
+
         //Delete Brand
         [HttpDelete("delete/{id}")]
         public async Task<IActionResult> DeleteBrand(int id)
@@ -117,32 +87,30 @@ namespace FinalProject_ITI.Controllers
         //filter Brands by Category
 
 
-
-
         //GET: api/brand/top
-       [HttpGet("top")]
-        public async Task<IActionResult> GetTopBrands()
-        {
-            var topBrands = await _brand.GetQuery()
-                .Include(b => b.Products)
-                    .ThenInclude(p => p.Reviews)
-                .Where(b => b.Products.Any(p => p.Reviews.Any()))
-                .Select(b => new TopBrandDto
-                {
-                    Id = b.Id,
-                    Name = b.Name,
-                    Description = b.Description,
-                    Image = b.Image,
-                    ProductCount = b.Products.Count,
-                    AverageRating = b.Products
-                        .SelectMany(p => p.Reviews)
-                        .Average(r => (double?)r.Rating) ?? 0
-                })
-                .OrderByDescending(b => b.AverageRating)
-                .Take(6)
-                .ToListAsync();
+       //[HttpGet("top")]
+       // public async Task<IActionResult> GetTopBrands()
+       // {
+       //     var topBrands = await _brand.GetQuery()
+       //         .Include(b => b.Products)
+       //             .ThenInclude(p => p.Reviews)
+       //         .Where(b => b.Products.Any(p => p.Reviews.Any()))
+       //         .Select(b => new TopBrandDto
+       //         {
+       //             Id = b.Id,
+       //             Name = b.Name,
+       //             Description = b.Description,
+       //             Image = b.Image,
+       //             ProductCount = b.Products.Count,
+       //             AverageRating = b.Products
+       //                 .SelectMany(p => p.Reviews)
+       //                 .Average(r => (double?)r.Rating) ?? 0
+       //         })
+       //         .OrderByDescending(b => b.AverageRating)
+       //         .Take(6)
+       //         .ToListAsync();
 
-            return Ok(topBrands);
-        }
+       //     return Ok(topBrands);
+       // }
     }
 }

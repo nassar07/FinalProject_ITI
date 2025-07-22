@@ -16,7 +16,7 @@ public class OrderDetailsController : ControllerBase
 
     [HttpGet("all")]
     public async Task<IActionResult> GetAllOrders() {
-        var Orders = _OrderDetail.GetQuery();
+        var Orders = await _OrderDetail.GetAll();
         return Ok(Orders);
     }
 
@@ -50,7 +50,7 @@ public class OrderDetailsController : ControllerBase
 
         if (Order == null) BadRequest("Order Doesn't exist");
 
-        Order.Id = OrderDetail.Id;
+        Order!.Id = OrderDetail.Id;
         Order.Price = OrderDetail.Price;
         Order.Quantity = OrderDetail.Quantity;
         Order.ProductID = OrderDetail.ProductID;
