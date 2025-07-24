@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FinalProject_ITI.Migrations
 {
     [DbContext(typeof(ITIContext))]
-    [Migration("20250714131431_Init")]
+    [Migration("20250723170946_Init")]
     partial class Init
     {
         /// <inheritdoc />
@@ -110,12 +110,10 @@ namespace FinalProject_ITI.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("EndTime")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<TimeSpan>("EndTime")
+                        .HasColumnType("time");
 
                     b.Property<string>("Entry")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("EventDate")
@@ -125,9 +123,8 @@ namespace FinalProject_ITI.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("StartTime")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<TimeSpan>("StartTime")
+                        .HasColumnType("time");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -171,18 +168,15 @@ namespace FinalProject_ITI.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Address")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("CategoryID")
                         .HasColumnType("int");
 
                     b.Property<string>("Description")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Image")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
@@ -193,7 +187,7 @@ namespace FinalProject_ITI.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<int>("SubscribeID")
+                    b.Property<int?>("SubscribeID")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -224,39 +218,6 @@ namespace FinalProject_ITI.Migrations
                     b.ToTable("Categories");
                 });
 
-            modelBuilder.Entity("FinalProject_ITI.Models.DeliveryBoy", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Password")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Phone")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("deliveryBoys");
-                });
-
             modelBuilder.Entity("FinalProject_ITI.Models.Order", b =>
                 {
                     b.Property<int>("Id")
@@ -265,16 +226,13 @@ namespace FinalProject_ITI.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("ApplicationUserId")
+                    b.Property<string>("DeliveryBoyID")
                         .HasColumnType("nvarchar(450)");
-
-                    b.Property<int?>("DeliveryBoyID")
-                        .HasColumnType("int");
 
                     b.Property<DateTime>("OrderDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("OrderTypeID")
+                    b.Property<int?>("OrderTypeID")
                         .HasColumnType("int");
 
                     b.Property<int>("Status")
@@ -289,8 +247,6 @@ namespace FinalProject_ITI.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("ApplicationUserId");
 
                     b.HasIndex("DeliveryBoyID");
 
@@ -309,7 +265,10 @@ namespace FinalProject_ITI.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("OrderID")
+                    b.Property<int>("BrandID")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("OrderID")
                         .HasColumnType("int");
 
                     b.Property<decimal>("Price")
@@ -323,6 +282,8 @@ namespace FinalProject_ITI.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("BrandID");
 
                     b.HasIndex("OrderID");
 
@@ -370,6 +331,9 @@ namespace FinalProject_ITI.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<long>("Total")
+                        .HasColumnType("bigint");
+
                     b.Property<string>("TransactionReference")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -390,15 +354,16 @@ namespace FinalProject_ITI.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("ApplicationUserId")
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<int>("BrandID")
                         .HasColumnType("int");
 
                     b.Property<string>("Description")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Image")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
@@ -413,6 +378,8 @@ namespace FinalProject_ITI.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ApplicationUserId");
 
                     b.HasIndex("BrandID");
 
@@ -650,9 +617,7 @@ namespace FinalProject_ITI.Migrations
 
                     b.HasOne("FinalProject_ITI.Models.Subscribe", "Subscribe")
                         .WithMany("Brands")
-                        .HasForeignKey("SubscribeID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("SubscribeID");
 
                     b.Navigation("Category");
 
@@ -663,19 +628,14 @@ namespace FinalProject_ITI.Migrations
 
             modelBuilder.Entity("FinalProject_ITI.Models.Order", b =>
                 {
-                    b.HasOne("FinalProject_ITI.Models.ApplicationUser", null)
-                        .WithMany("Orders")
-                        .HasForeignKey("ApplicationUserId");
-
-                    b.HasOne("FinalProject_ITI.Models.DeliveryBoy", "DeliveryBoy")
-                        .WithMany("Orders")
-                        .HasForeignKey("DeliveryBoyID");
+                    b.HasOne("FinalProject_ITI.Models.ApplicationUser", "DeliveryBoy")
+                        .WithMany("AssignedOrders")
+                        .HasForeignKey("DeliveryBoyID")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("FinalProject_ITI.Models.OrderType", "OrderType")
                         .WithMany("Orders")
-                        .HasForeignKey("OrderTypeID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("OrderTypeID");
 
                     b.HasOne("FinalProject_ITI.Models.ApplicationUser", "User")
                         .WithMany()
@@ -692,17 +652,24 @@ namespace FinalProject_ITI.Migrations
 
             modelBuilder.Entity("FinalProject_ITI.Models.OrderDetail", b =>
                 {
+                    b.HasOne("FinalProject_ITI.Models.Brand", "Brand")
+                        .WithMany()
+                        .HasForeignKey("BrandID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("FinalProject_ITI.Models.Order", "Order")
                         .WithMany("OrderDetails")
                         .HasForeignKey("OrderID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("FinalProject_ITI.Models.Product", "Product")
                         .WithMany("OrderDetails")
                         .HasForeignKey("ProductID")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("Brand");
 
                     b.Navigation("Order");
 
@@ -722,6 +689,10 @@ namespace FinalProject_ITI.Migrations
 
             modelBuilder.Entity("FinalProject_ITI.Models.Product", b =>
                 {
+                    b.HasOne("FinalProject_ITI.Models.ApplicationUser", null)
+                        .WithMany("Products")
+                        .HasForeignKey("ApplicationUserId");
+
                     b.HasOne("FinalProject_ITI.Models.Brand", "Brand")
                         .WithMany("Products")
                         .HasForeignKey("BrandID")
@@ -807,7 +778,9 @@ namespace FinalProject_ITI.Migrations
 
             modelBuilder.Entity("FinalProject_ITI.Models.ApplicationUser", b =>
                 {
-                    b.Navigation("Orders");
+                    b.Navigation("AssignedOrders");
+
+                    b.Navigation("Products");
 
                     b.Navigation("Reviews");
                 });
@@ -829,17 +802,11 @@ namespace FinalProject_ITI.Migrations
                     b.Navigation("Brands");
                 });
 
-            modelBuilder.Entity("FinalProject_ITI.Models.DeliveryBoy", b =>
-                {
-                    b.Navigation("Orders");
-                });
-
             modelBuilder.Entity("FinalProject_ITI.Models.Order", b =>
                 {
                     b.Navigation("OrderDetails");
 
-                    b.Navigation("Payment")
-                        .IsRequired();
+                    b.Navigation("Payment");
                 });
 
             modelBuilder.Entity("FinalProject_ITI.Models.OrderType", b =>

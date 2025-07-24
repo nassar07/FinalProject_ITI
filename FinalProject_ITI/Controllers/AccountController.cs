@@ -20,8 +20,6 @@ namespace FinalProject_ITI.Controllers
             this.userManager = userManager;
         }
 
-
-
         [HttpPost("Register")]
         public async Task<IActionResult> Register(RegisterDTO userFromRequest)
         {
@@ -46,7 +44,9 @@ namespace FinalProject_ITI.Controllers
                 return BadRequest(errors);
             }
 
-            if (userFromRequest.AccountType == "Customer" || userFromRequest.AccountType == "BrandOwner")
+            if (userFromRequest.AccountType == "Customer" ||
+                userFromRequest.AccountType == "BrandOwner" ||
+                userFromRequest.AccountType == "DeliveryBoy")
             {
                 await userManager.AddToRoleAsync(user, userFromRequest.AccountType);
             }

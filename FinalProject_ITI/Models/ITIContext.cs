@@ -18,10 +18,8 @@ public class ITIContext : IdentityDbContext<ApplicationUser>
     public DbSet<Bazar> Bazars { get; set; }
     public DbSet<BazarBrand> BazarBrands  { get; set; }
     public DbSet<Brand> Brands { get; set; }
-    public DbSet<DeliveryBoy> deliveryBoys { get; set; }
     public DbSet<OrderType> OrderTypes { get; set; }
     public DbSet<OrderDetail> OrderDetails { get; set; }
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -45,6 +43,12 @@ public class ITIContext : IdentityDbContext<ApplicationUser>
         modelBuilder.Entity<Subscribe>()
           .Property(s => s.Price)
            .HasPrecision(18, 2);
+
+        modelBuilder.Entity<Order>()
+           .HasOne(o => o.DeliveryBoy)
+           .WithMany(u => u.AssignedOrders)
+           .HasForeignKey(o => o.DeliveryBoyID)
+           .OnDelete(DeleteBehavior.SetNull);
 
         // BazarBrand (Many-to-Many between Bazar and Brand)
         modelBuilder.Entity<BazarBrand>()
@@ -91,25 +95,22 @@ public class ITIContext : IdentityDbContext<ApplicationUser>
             .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<Order>()
-            .HasOne(o => o.DeliveryBoy)
-            .WithMany(d => d.Orders)
-            .HasForeignKey(o => o.DeliveryBoyID);
-
-        modelBuilder.Entity<Order>()
             .HasOne(o => o.OrderType)
             .WithMany(ot => ot.Orders)
             .HasForeignKey(o => o.OrderTypeID);
 
         // OrderDetail
         modelBuilder.Entity<OrderDetail>()
-            .HasOne(od => od.Order)
-            .WithMany(o => o.OrderDetails)
-            .HasForeignKey(od => od.OrderID);
+         .HasOne(od => od.Order)
+         .WithMany(o => o.OrderDetails)
+         .HasForeignKey(od => od.OrderID)
+         .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<OrderDetail>()
-            .HasOne(od => od.Product)
-            .WithMany(p => p.OrderDetails)
-            .HasForeignKey(od => od.ProductID);
+        .HasOne(od => od.Product)
+        .WithMany(p => p.OrderDetails)
+        .HasForeignKey(od => od.ProductID)
+        .OnDelete(DeleteBehavior.Restrict);
 
         // Payment (1-1 with Order)
         modelBuilder.Entity<Payment>()

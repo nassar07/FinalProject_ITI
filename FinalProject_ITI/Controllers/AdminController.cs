@@ -1,6 +1,5 @@
-﻿using FinalProject_ITI.Models;
-using FinalProject_ITI.Repositories.Implementations;
-using Microsoft.AspNetCore.Authorization;
+﻿using FinalProject_ITI.DTO;
+using FinalProject_ITI.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -17,19 +16,19 @@ public class AdminController : ControllerBase
     {
         _userManager = userManager;
     }
-    [HttpPut("promotion/{userId}")]
+    [HttpPost("promotion/{userId}")]
     public async Task<IActionResult> PromoteToAdmin(string userId)
     {
         if (string.IsNullOrWhiteSpace(userId))
-            return BadRequest("User ID cannot be null or empty.");
+            return BadRequest(new { message = "User ID cannot be null or empty." });
 
         var user = await _userManager.FindByIdAsync(userId);
         if (user != null)
         {
             await _userManager.AddToRoleAsync(user, "ADMIN");
-            return Ok("User promoted to admin successfully.");
+            return Ok(new { message = "User promoted to admin successfully." });
         }
-        return BadRequest("failed to add user");
+        return BadRequest(new { message = "failed to add user" });
     }
 
     [HttpGet("AllUsers")]
@@ -37,17 +36,25 @@ public class AdminController : ControllerBase
     {
         var allUsers = await _userManager.Users.ToListAsync();
 
-        var normalUsers = new List<ApplicationUser>();
+        var userDtos = new List<UserDTO>();
 
         foreach (var user in allUsers)
         {
-            if (!await _userManager.IsInRoleAsync(user, "ADMIN"))
-            {
-                normalUsers.Add(user);
+            var roles = await _userManager.GetRolesAsync(user);
 
-            }
+            var dto = new UserDTO
+            {
+                Id = user.Id,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Email = user.Email,
+                Roles = roles.ToList()
+            };
+
+            userDtos.Add(dto);
         }
-        return Ok(normalUsers);
+
+        return Ok(userDtos);
     }
 
 }
