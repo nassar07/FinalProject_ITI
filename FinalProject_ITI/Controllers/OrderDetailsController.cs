@@ -25,7 +25,7 @@ public class OrderDetailsController : ControllerBase
     {
         var Res = await _OrderDetail.GetById(ID);
 
-        if (Res == null) BadRequest("Product Doesn't exist");
+        if (Res == null) BadRequest(new { message = "Product Doesn't exist" });
 
         return Ok(Res);
     }
@@ -38,7 +38,7 @@ public class OrderDetailsController : ControllerBase
             await _OrderDetail.Add(OrderDetail);
             await _OrderDetail.SaveChanges();
 
-            return Ok("Order Placed Successfully");
+            return Ok(new { message = "Order Placed Successfully" });
         }
       return BadRequest(ModelState);
     }
@@ -48,7 +48,7 @@ public class OrderDetailsController : ControllerBase
     {
         var Order = await _OrderDetail.GetById(OrderDetail.Id);
 
-        if (Order == null) BadRequest("Order Doesn't exist");
+        if (Order == null) BadRequest(new { message = "Order Doesn't exist" });
 
         Order!.Id = OrderDetail.Id;
         Order.Price = OrderDetail.Price;
@@ -57,7 +57,7 @@ public class OrderDetailsController : ControllerBase
 
         _OrderDetail.Update(Order);
         await _OrderDetail.SaveChanges();
-        return Ok("Order Updated");
+        return Ok(new { message = "Order Updated" });
     }
 
     [HttpDelete]
@@ -68,10 +68,10 @@ public class OrderDetailsController : ControllerBase
         if (order != null) {
             _OrderDetail.Delete(order);
             await _OrderDetail.SaveChanges();
-            return Ok("Order deleted");
+            return Ok(new { message = "Order deleted" });
         }
 
-        return BadRequest("Order Doesn't exist");
+        return BadRequest(new { message = "Order Doesn't exist" });
     }
 
 }

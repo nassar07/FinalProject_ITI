@@ -33,7 +33,7 @@ public class OrderController : ControllerBase
                 .ThenInclude(d => d.Product)
             .Where(o => o.UserID == userId)
             .ToListAsync();
-        if (orders == null) return BadRequest("there is no order");
+        if (orders == null) return BadRequest(new { message = "there is no order" });
         return Ok(orders);
     }
 
@@ -45,7 +45,7 @@ public class OrderController : ControllerBase
                 .ThenInclude(od => od.Product)
             .FirstOrDefaultAsync(o => o.Id == ID);
 
-        if (Res == null) return BadRequest("order Doesn't exist");
+        if (Res == null) return BadRequest(new { message = "order Doesn't exist" });
 
         return Ok(Res);
     }
@@ -82,7 +82,7 @@ public class OrderController : ControllerBase
             .FirstOrDefaultAsync(o => o.Id == Order.Id);
 
         if (existingOrder == null)
-            return BadRequest("Order doesn't exist");
+            return BadRequest(new { message = "Order doesn't exist" });
 
         // Update order properties
         existingOrder.OrderDate = Order.OrderDate;
@@ -111,7 +111,7 @@ public class OrderController : ControllerBase
 
         await _OrderDetail.SaveChanges();
         await _Order.SaveChanges();
-        return Ok("Order Updated");
+        return Ok(new { message = "Order Updated" });
     }
 
     [HttpDelete("delete")]
@@ -122,7 +122,7 @@ public class OrderController : ControllerBase
             .FirstOrDefaultAsync(o => o.Id == ID);
 
         if (order == null)
-            return BadRequest("Order doesn't exist");
+            return BadRequest(new { message = "Order doesn't exist" });
 
         // Remove related OrderDetails
         foreach (var detail in order.OrderDetails)
@@ -136,6 +136,6 @@ public class OrderController : ControllerBase
         await _Order.SaveChanges();
         await _OrderDetail.SaveChanges();
 
-        return Ok("Order deleted");
+        return Ok(new { message = "Order deleted" });
     }
 }

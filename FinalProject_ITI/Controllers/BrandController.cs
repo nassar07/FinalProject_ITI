@@ -2,6 +2,7 @@
 using FinalProject_ITI.Models;
 using FinalProject_ITI.Repositories.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace FinalProject_ITI.Controllers
 {
@@ -31,19 +32,28 @@ namespace FinalProject_ITI.Controllers
             var res = await _brand.GetById(id);
             if (res == null)
             {
-                return BadRequest("Brand doesn't exist");
+                return BadRequest(new { message = "Brand doesn't exist" });
             }
             return Ok(res);
         }
 
         //Create Brand
         [HttpPost("add")]
-        public async Task<IActionResult> CreateBrand(Brand Brand)
+        public async Task<IActionResult> CreateBrand(BrandDTO Brand)
         {
             if (ModelState.IsValid) {
-                await _brand.Add(Brand);
+                var NewBrand = new Brand
+                {
+                    Name = Brand.Name,
+                    OwnerID = Brand.OwnerID,
+                    Description = Brand.Description,
+                    Address = Brand.Address,
+                    Image = Brand.Image,
+                    CategoryID = Brand.CategoryID,
+                };
+                await _brand.Add(NewBrand);
                 await _brand.SaveChanges();
-                return Ok("Brand added successfully");
+                return Ok(new { message = "Brand added successfully" });
             }
             return BadRequest(Brand);
         }
@@ -55,7 +65,7 @@ namespace FinalProject_ITI.Controllers
             var existedBrand = await _brand.GetById(Brand.Id);
             if (existedBrand == null)
             {
-                return NotFound("Brand not found");
+                return NotFound(new { message = "Brand not found" });
             }
             existedBrand.Name = Brand.Name;
             existedBrand.Description = Brand.Description;
@@ -67,7 +77,7 @@ namespace FinalProject_ITI.Controllers
 
             _brand.Update(existedBrand);
             await _brand.SaveChanges();
-            return Ok("Brand updated successfully");
+            return Ok(new { message = "Brand updated successfully" });
         }
 
         //Delete Brand
@@ -81,36 +91,31 @@ namespace FinalProject_ITI.Controllers
             }
             _brand.Delete(existingBrand);
             await _brand.SaveChanges();
-            return Ok("Brand deleted successfully");
+            return Ok(new { message = "Brand deleted successfully" });
         }
 
-        //filter Brands by Category
+        [HttpGet("top")]
+        public async Task<IActionResult> GetTopBrands()
+        {
+            var topBrands = await _brand.GetQuery().Include(b => b.Products)
+                    .ThenInclude(p => p.Reviews)
+                .Where(b => b.Products.Any(p => p.Reviews.Any()))
+                .Select(b => new TopBrandDto
+                {
+                    Id = b.Id,
+                    Name = b.Name,
+                    Description = b.Description,
+                    Image = b.Image,
+                    ProductCount = b.Products.Count,
+                    AverageRating = b.Products
+                        .SelectMany(p => p.Reviews)
+                        .Average(r => (double?)r.Rating) ?? 0
+                })
+                .OrderByDescending(b => b.AverageRating)
+                .Take(6)
+                .ToListAsync();
 
-
-        //GET: api/brand/top
-       //[HttpGet("top")]
-       // public async Task<IActionResult> GetTopBrands()
-       // {
-       //     var topBrands = await _brand.GetQuery()
-       //         .Include(b => b.Products)
-       //             .ThenInclude(p => p.Reviews)
-       //         .Where(b => b.Products.Any(p => p.Reviews.Any()))
-       //         .Select(b => new TopBrandDto
-       //         {
-       //             Id = b.Id,
-       //             Name = b.Name,
-       //             Description = b.Description,
-       //             Image = b.Image,
-       //             ProductCount = b.Products.Count,
-       //             AverageRating = b.Products
-       //                 .SelectMany(p => p.Reviews)
-       //                 .Average(r => (double?)r.Rating) ?? 0
-       //         })
-       //         .OrderByDescending(b => b.AverageRating)
-       //         .Take(6)
-       //         .ToListAsync();
-
-       //     return Ok(topBrands);
-       // }
+            return Ok(topBrands);
+        }
     }
 }

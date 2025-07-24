@@ -96,20 +96,20 @@ public class DeliveryOrdersController : ControllerBase
         // Validate user existence and role
         var deliveryUser = await _UserManager.FindByIdAsync(deliveryBoyId);
         if (deliveryUser == null || !await _UserManager.IsInRoleAsync(deliveryUser, "DeliveryBoy"))
-            return BadRequest("Invalid delivery boy.");
+            return BadRequest(new { message = "Invalid delivery boy." });
 
         // Retrieve order
         var order = await _Order.GetById(orderId);
         if (order == null)
-            return NotFound("Order not found.");
+            return NotFound(new { message = "Order not found." });
 
         // Check status
         if (order.Status == OrderStatus.Cancelled)
-            return BadRequest("Order is Cancelled.");
+            return BadRequest(new { message = "Order is Cancelled." });
         if (order.Status == OrderStatus.OutForDelivery)
-            return BadRequest("Order is already Out For Delivery.");
+            return BadRequest(new { message = "Order is already Out For Delivery." });
         if (order.Status == OrderStatus.Delivered)
-            return BadRequest("Order is already Delivered.");
+            return BadRequest(new { message = "Order is already Delivered." });
 
         // Assign delivery
         order.DeliveryBoyID = deliveryBoyId;
@@ -118,7 +118,7 @@ public class DeliveryOrdersController : ControllerBase
         // Save
         await _Order.SaveChanges();
 
-        return Ok("Order assigned successfully.");
+        return Ok(new { message = "Order assigned successfully." });
     }
 
     [HttpPut("Release/{orderId}/{deliveryBoyId}")]
@@ -130,13 +130,13 @@ public class DeliveryOrdersController : ControllerBase
             .FirstOrDefaultAsync(o => o.Id == orderId && o.DeliveryBoyID == deliveryBoyId);
 
         if (order == null)
-            return BadRequest("Order does not exist or is not assigned to this delivery boy.");
+            return BadRequest(new { message = "Order does not exist or is not assigned to this delivery boy." });
 
         // Check if it's already delivered or cancelled
         if (order.Status == OrderStatus.Delivered)
-            return BadRequest("Delivered orders cannot be released.");
+            return BadRequest(new { message = "Delivered orders cannot be released." });
         if (order.Status == OrderStatus.Cancelled)
-            return BadRequest("Cancelled orders cannot be released.");
+            return BadRequest(new { message = "Cancelled orders cannot be released." });
 
         // Change status to Available and unassign the delivery boy
         order.Status = OrderStatus.Available;
@@ -144,7 +144,7 @@ public class DeliveryOrdersController : ControllerBase
 
         await _Order.SaveChanges();
 
-        return Ok("Order released successfully.");
+        return Ok(new { message = "Order released successfully." });
     }
 
     [HttpPut("Deliver/{orderId}/{deliveryBoyId}")]
@@ -155,18 +155,18 @@ public class DeliveryOrdersController : ControllerBase
             .FirstOrDefaultAsync(o => o.Id == orderId && o.DeliveryBoyID == deliveryBoyId);
 
         if (order == null)
-            return NotFound("Order not found or not assigned to this delivery boy.");
+            return NotFound(new { message = "Order not found or not assigned to this delivery boy." });
 
         // Ensure order is in the correct state
         if (order.Status != OrderStatus.OutForDelivery)
-            return BadRequest("Order is not currently out for delivery.");
+            return BadRequest(new { message = "Order is not currently out for delivery." });
 
         // Mark as delivered
         order.Status = OrderStatus.Delivered;
 
         await _Order.SaveChanges();
 
-        return Ok("Order marked as delivered successfully.");
+        return Ok(new { message = "Order marked as delivered successfully." });
     }
 
     //for admin can cancel order
@@ -177,10 +177,10 @@ public class DeliveryOrdersController : ControllerBase
             .FirstOrDefaultAsync(o => o.Id == orderId && o.DeliveryBoyID == deliveryBoyId);
 
         if (order == null)
-            return NotFound("Order not found or not assigned to this delivery boy.");
+            return NotFound(new { message = "Order not found or not assigned to this delivery boy." });
 
         if (order.Status != OrderStatus.OutForDelivery)
-            return BadRequest("Only out-for-delivery orders can be cancelled.");
+            return BadRequest(new { message = "Only out-for-delivery orders can be cancelled." });
 
         order.Status = OrderStatus.Cancelled;
 
@@ -188,6 +188,6 @@ public class DeliveryOrdersController : ControllerBase
 
         await _Order.SaveChanges();
 
-        return Ok("Order cancelled successfully.");
+        return Ok(new { message = "Order cancelled successfully." });
     }
 }
