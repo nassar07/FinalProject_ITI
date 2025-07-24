@@ -88,18 +88,19 @@ public class Program
             app.UseSwagger();
             app.UseSwaggerUI();
         }
+        app.UseStaticFiles();
 
-            app.UseCors(builder =>
-            {
-                builder.AllowAnyOrigin()
-                       .AllowAnyMethod()
-                       .AllowAnyHeader();
-            });
-            app.UseAuthorization();
+        app.UseCors(builder =>
+        {
+            builder.AllowAnyOrigin()
+                    .AllowAnyMethod()
+                    .AllowAnyHeader();
+        });
+        app.UseAuthorization();
 
 
-            app.MapControllers();
+        app.MapControllers();
 
-            app.Run();
+        app.Run();
     }
 }

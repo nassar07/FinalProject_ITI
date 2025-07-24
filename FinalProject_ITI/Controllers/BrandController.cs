@@ -39,44 +39,107 @@ namespace FinalProject_ITI.Controllers
 
         //Create Brand
         [HttpPost("add")]
-        public async Task<IActionResult> CreateBrand(BrandDTO Brand)
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> CreateBrand([FromForm] BrandDTO Brand)
         {
-            if (ModelState.IsValid) {
-                var NewBrand = new Brand
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            string imagePath = null;
+
+            if (Brand.ImageFile != null && Brand.ImageFile.Length > 0)
+            {
+                try
                 {
-                    Name = Brand.Name,
-                    OwnerID = Brand.OwnerID,
-                    Description = Brand.Description,
-                    Address = Brand.Address,
-                    Image = Brand.Image,
-                    CategoryID = Brand.CategoryID,
-                };
-                await _brand.Add(NewBrand);
-                await _brand.SaveChanges();
-                return Ok(new { message = "Brand added successfully" });
+                    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Brands");
+                    if (!Directory.Exists(uploadsFolder))
+                        Directory.CreateDirectory(uploadsFolder);
+
+                    var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(Brand.ImageFile.FileName);
+                    var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await Brand.ImageFile.CopyToAsync(fileStream);
+                    }
+
+                    imagePath = "/Brands/" + uniqueFileName;
+                }
+                catch (Exception ex)
+                {
+                    return StatusCode(500, new { message = "Image upload failed", error = ex.Message });
+                }
             }
-            return BadRequest(Brand);
+
+            var NewBrand = new Brand
+            {
+                Name = Brand.Name,
+                Description = Brand.Description,
+                Address = Brand.Address,
+                OwnerID = Brand.OwnerID,
+                CategoryID = Brand.CategoryID,
+                Image = imagePath ?? "",
+                SubscribeID = Brand.SubscribeID
+            };
+
+            await _brand.Add(NewBrand);
+            await _brand.SaveChanges();
+
+            return Ok(new { message = "Brand added successfully" });
         }
 
-        //Update Brand
         [HttpPut("update")]
-        public async Task<IActionResult> UpdateBrand(BrandDTO Brand)
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> UpdateBrand([FromForm] BrandDTO Brand)
         {
             var existedBrand = await _brand.GetById(Brand.Id);
             if (existedBrand == null)
-            {
                 return NotFound(new { message = "Brand not found" });
+
+            // تحديث الصورة إن وُجدت
+            if (Brand.ImageFile != null && Brand.ImageFile.Length > 0)
+            {
+                try
+                {
+                    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Brands");
+                    if (!Directory.Exists(uploadsFolder))
+                        Directory.CreateDirectory(uploadsFolder);
+
+                    var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(Brand.ImageFile.FileName);
+                    var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await Brand.ImageFile.CopyToAsync(fileStream);
+                    }
+
+                    // حذف الصورة القديمة
+                    if (!string.IsNullOrEmpty(existedBrand.Image))
+                    {
+                        var oldImagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", existedBrand.Image.TrimStart('/'));
+                        if (System.IO.File.Exists(oldImagePath))
+                            System.IO.File.Delete(oldImagePath);
+                    }
+
+                    existedBrand.Image = "/Brands/" + uniqueFileName;
+                }
+                catch (Exception ex)
+                {
+                    return StatusCode(500, new { message = "Image upload failed", error = ex.Message });
+                }
             }
+
+            // التحديثات الأخرى
             existedBrand.Name = Brand.Name;
             existedBrand.Description = Brand.Description;
             existedBrand.Address = Brand.Address;
-            existedBrand.Image = Brand.Image;
             existedBrand.CategoryID = Brand.CategoryID;
             existedBrand.OwnerID = Brand.OwnerID;
             existedBrand.SubscribeID = Brand.SubscribeID;
 
             _brand.Update(existedBrand);
             await _brand.SaveChanges();
+
             return Ok(new { message = "Brand updated successfully" });
         }
 
@@ -89,6 +152,17 @@ namespace FinalProject_ITI.Controllers
             {
                 return NotFound("Brand not found");
             }
+
+            // Delete image file from disk (if exists)
+            if (!string.IsNullOrEmpty(existingBrand.Image))
+            {
+                var imagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", existingBrand.Image.TrimStart('/'));
+                if (System.IO.File.Exists(imagePath))
+                {
+                    System.IO.File.Delete(imagePath);
+                }
+            }
+
             _brand.Delete(existingBrand);
             await _brand.SaveChanges();
             return Ok(new { message = "Brand deleted successfully" });

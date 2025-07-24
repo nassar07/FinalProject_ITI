@@ -32,19 +32,27 @@ namespace FinalProject_ITI.Controllers
             return Ok(Res);
         }
 
-        [HttpPost("Review")]
-        public async Task<IActionResult> AddReview(Review Review)
+        [HttpPost("add")]
+        public async Task<IActionResult> AddReview(ReviewDTO reviewDto)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var review = new Review
             {
+                UserID = reviewDto.UserID,
+                Comment = reviewDto.Comment,
+                Rating = reviewDto.Rating,
+                CreatedAt = reviewDto.CreatedAt,
+                ProductID = reviewDto.ProductID
+            };
 
-                await _Review.Add(Review);
-                await _Review.SaveChanges();
+            await _Review.Add(review);
+            await _Review.SaveChanges();
 
-                return Ok(new { message = "Review has been submitted" });
-            }
-            return BadRequest(ModelState);
+            return Ok(new { message = "Review has been submitted" });
         }
+
 
         [HttpPut("update")]
         public async Task<IActionResult> UpdateReview(ReviewDTO Review)
