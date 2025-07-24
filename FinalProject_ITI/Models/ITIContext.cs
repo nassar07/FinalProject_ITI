@@ -107,10 +107,10 @@ public class ITIContext : IdentityDbContext<ApplicationUser>
          .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<OrderDetail>()
-         .HasOne(od => od.Order)
-         .WithMany(o => o.OrderDetails)
-         .HasForeignKey(od => od.OrderID)
-         .OnDelete(DeleteBehavior.Cascade);
+        .HasOne(od => od.Product)
+        .WithMany(p => p.OrderDetails)
+        .HasForeignKey(od => od.ProductID)
+        .OnDelete(DeleteBehavior.Restrict);
 
         // Payment (1-1 with Order)
         modelBuilder.Entity<Payment>()

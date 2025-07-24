@@ -11,8 +11,6 @@ public class BrandDTO
     public int CategoryID { get; set; }
     public string OwnerID { get; set; }
     public int? SubscribeID { get; set; }
-
-
     public ICollection<Product>? Products { get; set; }
     public ICollection<BazarBrand>? BazarBrands { get; set; }
 }

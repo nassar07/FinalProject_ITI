@@ -52,7 +52,7 @@ public class BazaarController : ControllerBase
         _bazarRepository.Update(existingBazaar);
         await _bazarRepository.SaveChanges();
 
-        return Ok("Updated");
+        return Ok(new { message = "Updated" });
     }
 
     [HttpPost("CreateBazaar")]
@@ -74,7 +74,7 @@ public class BazaarController : ControllerBase
             return NotFound();
         _bazarRepository.Delete(bazaar);
         await _bazarRepository.SaveChanges();
-        return Ok("deleted");
+        return Ok(new { message = "deleted" });
     }
 
     [AllowAnonymous]

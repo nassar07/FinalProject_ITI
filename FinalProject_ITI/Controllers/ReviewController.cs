@@ -27,7 +27,7 @@ namespace FinalProject_ITI.Controllers
         {
             var Res = await _Review.GetById(ID);
 
-            if (Res == null) BadRequest("Review Doesn't exist");
+            if (Res == null) BadRequest(new { message = "Review Doesn't exist" });
 
             return Ok(Res);
         }
@@ -41,7 +41,7 @@ namespace FinalProject_ITI.Controllers
                 await _Review.Add(Review);
                 await _Review.SaveChanges();
 
-                return Ok("Review has been submitted");
+                return Ok(new { message = "Review has been submitted" });
             }
             return BadRequest(ModelState);
         }
@@ -51,7 +51,7 @@ namespace FinalProject_ITI.Controllers
         {
             var Res = await _Review.GetById(Review.Id);
 
-            if (Res == null) BadRequest("Review Doesn't exist");
+            if (Res == null) BadRequest(new { message = "Review Doesn't exist" });
 
             Res.Rating = Review.Rating;
             Res.Comment = Review.Comment;
@@ -61,7 +61,7 @@ namespace FinalProject_ITI.Controllers
 
             _Review.Update(Res);
             await _Review.SaveChanges();
-            return Ok("Review Updated");
+            return Ok(new { message = "Review Updated" });
         }
 
         [HttpDelete]
@@ -73,10 +73,10 @@ namespace FinalProject_ITI.Controllers
             {
                 _Review.Delete(Review);
                 await _Review.SaveChanges();
-                return Ok("Review deleted");
+                return Ok(new { message = "Review deleted" });
             }
 
-            return BadRequest("Review Doesn't exist");
+            return BadRequest(new { message = "Review Doesn't exist" });
         }
     }
 }

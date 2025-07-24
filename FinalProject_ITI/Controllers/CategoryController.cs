@@ -28,7 +28,7 @@ namespace FinalProject_ITI.Controllers
         {
             var Res = await _Category.GetById(ID);
 
-            if (Res == null) BadRequest("Category Doesn't exist");
+            if (Res == null) BadRequest(new { message = "Category Doesn't exist" });
 
             return Ok(Res);
         }
@@ -47,7 +47,7 @@ namespace FinalProject_ITI.Controllers
                 await _Category.Add(NewCategory);
                 await _Category.SaveChanges();
 
-                return Ok("Category has been submitted");
+                return Ok(new { message = "Category has been submitted" });
             }
             return BadRequest(ModelState);
         }
@@ -57,13 +57,13 @@ namespace FinalProject_ITI.Controllers
         {
             var Res = await _Category.GetById(Category.ID);
 
-            if (Res == null) BadRequest("Category Doesn't exist");
+            if (Res == null) BadRequest(new { message = "Category Doesn't exist" });
 
             Res.Name = Category.Name;
 
             _Category.Update(Res);
             await _Category.SaveChanges();
-            return Ok("Category Updated");
+            return Ok(new { message = "Category Updated" });
         }
 
         [HttpDelete]
@@ -75,10 +75,10 @@ namespace FinalProject_ITI.Controllers
             {
                 _Category.Delete(Category);
                 await _Category.SaveChanges();
-                return Ok("Category deleted");
+                return Ok(new { message = "Category deleted"});
             }
 
-            return BadRequest("Category Doesn't exist");
+            return BadRequest(new { message = "Category Doesn't exist"});
         }
     }
 }

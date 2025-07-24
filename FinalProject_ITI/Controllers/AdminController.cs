@@ -20,15 +20,15 @@ public class AdminController : ControllerBase
     public async Task<IActionResult> PromoteToAdmin(string userId)
     {
         if (string.IsNullOrWhiteSpace(userId))
-            return BadRequest("User ID cannot be null or empty.");
+            return BadRequest(new { message = "User ID cannot be null or empty." });
 
         var user = await _userManager.FindByIdAsync(userId);
         if (user != null)
         {
             await _userManager.AddToRoleAsync(user, "ADMIN");
-            return Ok("User promoted to admin successfully.");
+            return Ok(new { message = "User promoted to admin successfully." });
         }
-        return BadRequest("failed to add user");
+        return BadRequest(new { message = "failed to add user" });
     }
 
     [HttpGet("AllUsers")]

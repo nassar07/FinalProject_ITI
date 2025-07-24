@@ -2,6 +2,7 @@
 using FinalProject_ITI.Models;
 using FinalProject_ITI.Repositories.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace FinalProject_ITI.Controllers;
 
@@ -15,10 +16,12 @@ public class ProductController : ControllerBase
         _Product = Product;
     }
 
-    [HttpGet("all")]
-    public async Task<IActionResult> GetAllProduct()
+    [HttpGet("all/{brandID}")]
+    public async Task<IActionResult> GetAllProduct(int brandID)
     {
-        var Product = await _Product.GetAll();
+        var Product = await _Product.GetQuery()
+            .Where(p => p.BrandID == brandID)
+            .ToListAsync();
         return Ok(Product);
     }
 
@@ -27,19 +30,28 @@ public class ProductController : ControllerBase
     {
         var Res = await _Product.GetById(ID);
 
-        if (Res == null) BadRequest("Product Doesn't exist");
+        if (Res == null) BadRequest(new { message = "Product Doesn't exist" });
 
         return Ok(Res);
     }
 
     [HttpPost("add")]
-    public async Task<IActionResult> AddProduct(Product Product)
+    public async Task<IActionResult> AddProduct(ProductDTO Product)
     {
         if (ModelState.IsValid)
         {
-            await _Product.Add(Product);
+            var NewProduct = new Product
+            {
+                Name = Product.Name,
+                Price = Product.Price,
+                Description = Product.Description,
+                Quantity = Product.Quantity,
+                Image = Product.Image,
+                BrandID = Product.BrandID
+            };
+            await _Product.Add(NewProduct);
             await _Product.SaveChanges();
-            return Ok("Product Placed Successfully");
+            return Ok(new { message = "Product Placed Successfully" });
         }
         return BadRequest(ModelState);
     }
@@ -49,7 +61,7 @@ public class ProductController : ControllerBase
     {
         var Res = await _Product.GetById(Product.Id);
 
-        if (Res == null) BadRequest("Product Doesn't exist");
+        if (Res == null) BadRequest(new { message = "Product Doesn't exist" });
 
         //map here
         Res.Name = Product.Name;
@@ -63,7 +75,7 @@ public class ProductController : ControllerBase
 
         _Product.Update(Res);
         await _Product.SaveChanges();
-        return Ok("Product Updated");
+        return Ok(new { message = "Product Updated" });
     }
 
     [HttpDelete]
@@ -75,9 +87,9 @@ public class ProductController : ControllerBase
         {
             _Product.Delete(order);
             await _Product.SaveChanges();
-            return Ok("Product deleted");
+            return Ok(new { message = "Product deleted" });
         }
 
-        return BadRequest("Product Doesn't exist");
+        return BadRequest(new { message = "Product Doesn't exist" });
     }
 }

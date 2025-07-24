@@ -26,7 +26,7 @@ public class BazarBrandController : ControllerBase
         var existed = await _BazarBrandRepository.FirstOrDefaultAsync(b => b.BazarID == BazarId && b.BrandID == BrandId);
 
         if (existed != null)
-            return BadRequest("Brand already exists in the Bazar.");
+            return BadRequest(new { message = "Brand already exists in the Bazar." });
 
         var newRelation = new BazarBrand
         {
@@ -37,7 +37,7 @@ public class BazarBrandController : ControllerBase
         await _BazarBrand.Add(newRelation);
         await _BazarBrand.SaveChanges();
 
-        return Ok("Brand assigned to Bazar.");
+        return Ok(new { message = "Brand assigned to Bazar." });
     }
 
     [HttpDelete("RemoveBrandFromBazar/{BazarId}/{BrandId}")]
@@ -46,12 +46,12 @@ public class BazarBrandController : ControllerBase
         var existed = await _BazarBrandRepository.FirstOrDefaultAsync(b => b.BazarID == BazarId && b.BrandID == BrandId);
 
         if (existed == null)
-            return NotFound("Brand not found in the Bazar");
+            return NotFound(new { message = "Brand not found in the Bazar" });
 
         _BazarBrand.Delete(existed);
         await _BazarBrand.SaveChanges();
 
-        return Ok("Brand removed from Bazar.");
+        return Ok(new { message = "Brand removed from Bazar." });
     }
 
     [HttpGet("{bazarId}/brands")]
