@@ -1,4 +1,5 @@
 ﻿using FinalProject_ITI.Models;
+using Microsoft.AspNetCore.Mvc;
 
 namespace FinalProject_ITI.DTO;
 public class BrandDTO
@@ -7,7 +8,8 @@ public class BrandDTO
     public string Name { get; set; }
     public string? Description { get; set; }
     public string? Address { get; set; }
-    public string? Image { get; set; }
+    [FromForm]
+    public IFormFile? ImageFile { get; set; }
     public int CategoryID { get; set; }
     public string OwnerID { get; set; }
     public int? SubscribeID { get; set; }
