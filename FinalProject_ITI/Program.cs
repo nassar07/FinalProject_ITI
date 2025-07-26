@@ -1,3 +1,4 @@
+using FinalProject_ITI.Helpers;
 using FinalProject_ITI.Models;
 using FinalProject_ITI.Repositories.Implementations;
 using FinalProject_ITI.Repositories.Interfaces;
@@ -47,40 +48,7 @@ public class Program
 
         var app = builder.Build();
 
-        using (var scope = app.Services.CreateScope())
-        {
-            var services = scope.ServiceProvider;
-            var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
-            var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
-
-            string[] roles = { "USER", "ADMIN", "DeliveryBoy" };
-            foreach (var roleName in roles)
-            {
-                if (!await roleManager.RoleExistsAsync(roleName))
-                {
-                    await roleManager.CreateAsync(new IdentityRole(roleName));
-                }
-            }
-
-            string adminEmail = "admin@admin.com";
-            string adminPassword = "123";
-            var adminUser = await userManager.FindByEmailAsync(adminEmail);
-
-            if (adminUser == null)
-            {
-                var newAdmin = new ApplicationUser
-                {
-                    UserName = adminEmail,
-                    Email = adminEmail
-                };
-
-                var result = await userManager.CreateAsync(newAdmin, adminPassword);
-                if (result.Succeeded)
-                {
-                    await userManager.AddToRoleAsync(newAdmin, "ADMIN");
-                }
-            }
-        }
+        await SeedRoles.SeedRolesAndAdminAsync(app);
 
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
@@ -96,8 +64,9 @@ public class Program
                     .AllowAnyMethod()
                     .AllowAnyHeader();
         });
-        app.UseAuthorization();
 
+        app.UseAuthentication();
+        app.UseAuthorization();
 
         app.MapControllers();
 
