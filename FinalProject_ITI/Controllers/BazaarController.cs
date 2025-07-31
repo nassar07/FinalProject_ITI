@@ -78,23 +78,13 @@ public class BazaarController : ControllerBase
     }
 
     [AllowAnonymous]
-    [HttpGet("next-event/{id}")]
-    public async Task<IActionResult> GetBazaarEventById(int id)
+    [HttpGet("next-event")]
+    public async Task<IActionResult> GetBazaarEventById()
     {
-        var bazaar = await _bazarRepository.GetQuery()
-            .Where(b => b.Id == id)
-            .Select(b => new
-            {
-                b.Id,
-                Title = b.Title,
-                Date = b.EventDate.ToString("MMMM dd, yyyy"),
-                DateTime = $"{b.EventDate:dddd, MMMM dd, yyyy} • {b.StartTime} - {b.EndTime}",
-                Location = b.Location,
-                Entry = b.Entry
-            })
-            .FirstOrDefaultAsync();
+        var bazaar = await _bazarRepository.GetQuery().OrderByDescending(b=>b.EventDate).FirstOrDefaultAsync();
+           
         if (bazaar == null)
-            return NotFound();
+            return NotFound(new { message = "No Bazzar already Available" });
         return Ok(bazaar);
     }
 
