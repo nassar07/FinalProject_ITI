@@ -112,6 +112,12 @@ public class ITIContext : IdentityDbContext<ApplicationUser>
         .HasForeignKey(od => od.ProductID)
         .OnDelete(DeleteBehavior.Restrict);
 
+        modelBuilder.Entity<OrderDetail>()
+        .HasOne(od => od.Brand)
+        .WithMany(b => b.OrderDetails)
+        .HasForeignKey(od => od.BrandID)
+        .OnDelete(DeleteBehavior.Restrict);
+
         // Payment (1-1 with Order)
         modelBuilder.Entity<Payment>()
             .HasOne(p => p.Order)

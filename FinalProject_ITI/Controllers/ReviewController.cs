@@ -2,6 +2,7 @@
 using FinalProject_ITI.Models;
 using FinalProject_ITI.Repositories.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace FinalProject_ITI.Controllers
 {
@@ -20,6 +21,17 @@ namespace FinalProject_ITI.Controllers
         {
             var Review = await _Review.GetAll();
             return Ok(Review);
+        }
+
+        [HttpGet("{brandId}/reviews")]
+        public async Task<IActionResult> GetReviewsForBrand(int brandId)
+        {
+            var reviews = await _Review.GetQuery()
+                .Where(r => r.Product.BrandID == brandId)
+                .Include(r => r.Product)
+                .ToListAsync();
+
+            return Ok(reviews);
         }
 
         [HttpGet("{ID}")]

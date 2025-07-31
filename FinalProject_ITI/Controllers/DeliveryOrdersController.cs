@@ -12,24 +12,27 @@ public class DeliveryOrdersController : ControllerBase
 {
     private readonly IRepository<Order> _Order;
     private readonly UserManager<ApplicationUser> _UserManager;
-    public DeliveryOrdersController(IRepository<Order> Order, UserManager<ApplicationUser> UserManager)
+    private readonly IRepository<ApplicationUser> _User;
+    public DeliveryOrdersController(IRepository<Order> Order, UserManager<ApplicationUser> UserManager, IRepository<ApplicationUser> User)
     {
         _Order = Order;
         _UserManager = UserManager;
+        _User = User;
     }
 
     [HttpGet("MyOrders/{deliveryBoyId}")]
     public async Task<IActionResult> GetMyAssignedOrders(string deliveryBoyId)
     {
         var MyOrders = await _Order.GetQuery()
-           .Where(o => o.Status == OrderStatus.OutForDelivery &&
-           o.DeliveryBoyID == deliveryBoyId)
+           .Where(o => o.DeliveryBoyID == deliveryBoyId)
            .Include(o => o.OrderDetails)
            .Select(o => new
            {
                o.Id,
                o.OrderDate,
                o.Status,
+               o.UserID,
+               o.DeliveryBoyID,
                OrderDetails = o.OrderDetails.Select(od => new
                {
                    od.ProductID,
@@ -53,6 +56,8 @@ public class DeliveryOrdersController : ControllerBase
                 o.Id,
                 o.OrderDate,
                 o.Status,
+                o.UserID,
+                o.DeliveryBoyID,
                 OrderDetails = o.OrderDetails.Select(od => new
                 {
                     od.ProductID,
@@ -78,6 +83,8 @@ public class DeliveryOrdersController : ControllerBase
                 o.Id,
                 o.OrderDate,
                 o.Status,
+                o.UserID,
+                o.DeliveryBoyID,
                 OrderDetails = o.OrderDetails.Select(od => new
                 {
                     od.ProductID,
@@ -93,33 +100,44 @@ public class DeliveryOrdersController : ControllerBase
     [HttpPut("AssignOrderToDelivery/{orderId}/{deliveryBoyId}")]
     public async Task<IActionResult> AssignOrderToDelivery(int orderId, string deliveryBoyId)
     {
-        // Validate user existence and role
-        var deliveryUser = await _UserManager.FindByIdAsync(deliveryBoyId);
+        // Get delivery user with orders
+        var deliveryUser = await _User.GetQuery()
+            .Include(u => u.AssignedOrders)
+            .FirstOrDefaultAsync(u => u.Id == deliveryBoyId);
+
         if (deliveryUser == null || !await _UserManager.IsInRoleAsync(deliveryUser, "DeliveryBoy"))
             return BadRequest(new { message = "Invalid delivery boy." });
+
+        // Check how many active orders the delivery boy already has
+        int activeOrdersCount = deliveryUser.AssignedOrders
+            ?.Count(o => o.Status == OrderStatus.DeliveryBrandHandingRequest || o.Status == OrderStatus.OutForDelivery) ?? 0;
+
+        if (activeOrdersCount >= 3)
+            return BadRequest("This delivery person already has 3 active orders.");
 
         // Retrieve order
         var order = await _Order.GetById(orderId);
         if (order == null)
             return NotFound(new { message = "Order not found." });
 
-        // Check status
         if (order.Status == OrderStatus.Cancelled)
             return BadRequest(new { message = "Order is Cancelled." });
+
         if (order.Status == OrderStatus.OutForDelivery)
             return BadRequest(new { message = "Order is already Out For Delivery." });
+
         if (order.Status == OrderStatus.Delivered)
             return BadRequest(new { message = "Order is already Delivered." });
 
-        // Assign delivery
+        // Assign
         order.DeliveryBoyID = deliveryBoyId;
-        order.Status = OrderStatus.OutForDelivery;
+        order.Status = OrderStatus.DeliveryBrandHandingRequest;
 
-        // Save
         await _Order.SaveChanges();
 
         return Ok(new { message = "Order assigned successfully." });
     }
+
 
     [HttpPut("Release/{orderId}/{deliveryBoyId}")]
     public async Task<IActionResult> ReleaseOrder(int orderId, string deliveryBoyId)
@@ -139,7 +157,7 @@ public class DeliveryOrdersController : ControllerBase
             return BadRequest(new { message = "Cancelled orders cannot be released." });
 
         // Change status to Available and unassign the delivery boy
-        order.Status = OrderStatus.Available;
+        order.Status = OrderStatus.DeliveryBrandHandingRequest;
         order.DeliveryBoyID = null;
 
         await _Order.SaveChanges();
@@ -169,7 +187,17 @@ public class DeliveryOrdersController : ControllerBase
         return Ok(new { message = "Order marked as delivered successfully." });
     }
 
-    //for admin can cancel order
+    [HttpGet("delivery/{deliveryId}/active-orders")]
+    public async Task<IActionResult> GetActiveOrdersForDelivery(string deliveryId)
+    {
+        var activeOrders = await _Order.GetQuery()
+            .Where(o => o.DeliveryBoyID == deliveryId && 
+            (o.Status == OrderStatus.DeliveryBrandHandingRequest || o.Status == OrderStatus.OutForDelivery))
+            .ToListAsync();
+
+        return Ok(activeOrders);
+    }
+
     [HttpPost("Cancel")]
     public async Task<IActionResult> CancelOrder(int orderId, string deliveryBoyId)
     {
