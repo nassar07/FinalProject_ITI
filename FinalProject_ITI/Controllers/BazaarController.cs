@@ -8,7 +8,7 @@ using Microsoft.SqlServer.Server;
 
 namespace FinalProject_ITI.Controllers;
 
-//[Authorize(Roles = "Admin")]
+[Authorize(Roles = "Admin")]
 [Route("api/[controller]")]
 [ApiController]
 public class BazaarController : ControllerBase
