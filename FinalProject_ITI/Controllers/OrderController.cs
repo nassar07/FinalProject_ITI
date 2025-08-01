@@ -11,11 +11,13 @@ namespace FinalProject_ITI.Controllers;
 public class OrderController : ControllerBase
 {
     private readonly IRepository<Order> _Order;
+    private readonly IRepository<Product> _Products;
     private readonly IRepository<OrderDetail> _OrderDetail;
-    public OrderController(IRepository<Order> Order, IRepository<OrderDetail> OrderDetail)
+    public OrderController(IRepository<Order> Order, IRepository<OrderDetail> OrderDetail, IRepository<Product> Products)
     {
         _Order = Order;
         _OrderDetail = OrderDetail;
+        _Products = Products;
     }
 
     [HttpGet("all")]
@@ -50,6 +52,29 @@ public class OrderController : ControllerBase
         return Ok(Res);
     }
 
+    [HttpGet("Brand/{brandId}")]
+    public async Task<IActionResult> GetOrdersByBrand(int brandId)
+    {
+        var result = await _Order.GetQuery()
+        .Where(o => o.OrderDetails.Any(od => od.BrandID == brandId))
+        .Select(o => new {
+            o.Id,
+            o.OrderDate,
+            o.Status,
+            o.TotalAmount,
+            o.UserID,
+            o.DeliveryBoyID,
+            OrderDetails = o.OrderDetails
+                .Where(od => od.BrandID == brandId)
+                .Select(od => new {
+                    od.ProductID,
+                    od.Quantity,
+                    od.Price
+                })
+        }).ToListAsync();
+        return Ok(result);
+    }
+
     [HttpPost("CreateOrder")]
     public async Task<IActionResult> CreateOrder(OrderDTO Order)
     {
@@ -61,11 +86,21 @@ public class OrderController : ControllerBase
             OrderTypeID = Order.OrderTypeID,
             UserID = Order.UserID,
             DeliveryBoyID = Order.DeliveryBoyID,
-            OrderDetails = Order.OrderDetails.Select(d => new OrderDetail
+            OrderDetails = Order.OrderDetails.Select(d =>
             {
-                ProductID = d.ProductID,
-                Quantity = d.Quantity,
-                Price = d.Price
+                var product = _Products.GetQuery().FirstOrDefault(p => p.Id == d.ProductID);
+                if (product == null)
+                {
+                    throw new Exception($"Product with ID {d.ProductID} not found.");
+                }
+
+                return new OrderDetail
+                {
+                    ProductID = d.ProductID,
+                    Quantity = d.Quantity,
+                    Price = d.Price,
+                    BrandID = product.BrandID
+                };
             }).ToList()
         };
 
@@ -100,11 +135,21 @@ public class OrderController : ControllerBase
         }
 
         // 2. Add new order details
-        existingOrder.OrderDetails = Order.OrderDetails.Select(od => new OrderDetail
+        existingOrder.OrderDetails = Order.OrderDetails.Select(d =>
         {
-            ProductID = od.ProductID,
-            Quantity = od.Quantity,
-            Price = od.Price,
+            var product = _Products.GetQuery().FirstOrDefault(p => p.Id == d.ProductID);
+            if (product == null)
+            {
+                throw new Exception($"Product with ID {d.ProductID} not found.");
+            }
+
+            return new OrderDetail
+            {
+                ProductID = d.ProductID,
+                Quantity = d.Quantity,
+                Price = d.Price,
+                BrandID = product.BrandID
+            };
         }).ToList();
 
         _Order.Update(existingOrder);

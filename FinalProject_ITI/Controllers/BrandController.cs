@@ -191,5 +191,18 @@ namespace FinalProject_ITI.Controllers
 
             return Ok(topBrands);
         }
+
+        [HttpGet("user/{userId}")]
+        public async Task<IActionResult> GetBrandsByUserId(string userId)
+        {
+            var brands = await _brand.GetQuery().Where(b => b.OwnerID == userId).ToListAsync();
+
+            if (brands == null || !brands.Any())
+            {
+                return NotFound(new { message = "No brands found for this user." });
+            }
+
+            return Ok(brands);
+        }
     }
 }
