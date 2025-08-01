@@ -204,5 +204,13 @@ namespace FinalProject_ITI.Controllers
 
             return Ok(brands);
         }
+
+        [HttpGet("HasBrand/{userId}")]
+        public async Task<IActionResult> HasBrand(string userId)
+        {
+            var hasBrand = await _brand.GetQuery().AnyAsync(b => b.OwnerID == userId);
+            return Ok(new { hasBrand });
+        }
+
     }
 }
