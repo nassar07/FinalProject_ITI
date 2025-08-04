@@ -31,6 +31,25 @@ public class AdminController : ControllerBase
         return BadRequest(new { message = "failed to add user" });
     }
 
+    [HttpPost("demotion/{userId}")]
+    public async Task<IActionResult> DemoteToUser(string userId)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+            return BadRequest(new { message = "User ID cannot be null or empty." });
+
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user != null)
+        {
+            var result = await _userManager.RemoveFromRoleAsync(user, "ADMIN");
+            if (result.Succeeded)
+                return Ok(new { message = "User demoted from admin successfully." });
+
+            return BadRequest(new { message = "Failed to remove user from ADMIN role." });
+        }
+
+        return BadRequest(new { message = "User not found." });
+    }
+
     [HttpGet("AllUsers")]
     public async Task<IActionResult> UsersList()
     {

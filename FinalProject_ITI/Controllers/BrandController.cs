@@ -37,7 +37,6 @@ namespace FinalProject_ITI.Controllers
             return Ok(res);
         }
 
-        //Create Brand
         [HttpPost("add")]
         [Consumes("multipart/form-data")]
         public async Task<IActionResult> CreateBrand([FromForm] BrandDTO Brand)
@@ -45,17 +44,25 @@ namespace FinalProject_ITI.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            string imagePath = null;
+            string? imagePath = null;
+            string? profileImagePath = null;
+
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
 
             if (Brand.ImageFile != null && Brand.ImageFile.Length > 0)
             {
+                var extension = Path.GetExtension(Brand.ImageFile.FileName).ToLower();
+
+                if (!allowedExtensions.Contains(extension))
+                    return BadRequest(new { message = "Unsupported image format for ImageFile" });
+
                 try
                 {
                     var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Brands");
                     if (!Directory.Exists(uploadsFolder))
                         Directory.CreateDirectory(uploadsFolder);
 
-                    var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(Brand.ImageFile.FileName);
+                    var uniqueFileName = Guid.NewGuid().ToString() + extension;
                     var filePath = Path.Combine(uploadsFolder, uniqueFileName);
 
                     using (var fileStream = new FileStream(filePath, FileMode.Create))
@@ -63,11 +70,40 @@ namespace FinalProject_ITI.Controllers
                         await Brand.ImageFile.CopyToAsync(fileStream);
                     }
 
-                    imagePath = "/Brands/" + uniqueFileName;
+                    imagePath = Path.Combine("Brands", uniqueFileName).Replace("\\", "/");
                 }
                 catch (Exception ex)
                 {
                     return StatusCode(500, new { message = "Image upload failed", error = ex.Message });
+                }
+            }
+
+            if (Brand.ProfileImage != null && Brand.ProfileImage.Length > 0)
+            {
+                var extension = Path.GetExtension(Brand.ProfileImage.FileName).ToLower();
+
+                if (!allowedExtensions.Contains(extension))
+                    return BadRequest(new { message = "Unsupported image format for ProfileImage" });
+
+                try
+                {
+                    var profileFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Brands", "ProfileImages");
+                    if (!Directory.Exists(profileFolder))
+                        Directory.CreateDirectory(profileFolder);
+
+                    var uniqueFileName = Guid.NewGuid().ToString() + extension;
+                    var filePath = Path.Combine(profileFolder, uniqueFileName);
+
+                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await Brand.ProfileImage.CopyToAsync(fileStream);
+                    }
+
+                    profileImagePath = Path.Combine("Brands", "ProfileImages", uniqueFileName).Replace("\\", "/");
+                }
+                catch (Exception ex)
+                {
+                    return StatusCode(500, new { message = "Profile image upload failed", error = ex.Message });
                 }
             }
 
@@ -79,11 +115,19 @@ namespace FinalProject_ITI.Controllers
                 OwnerID = Brand.OwnerID,
                 CategoryID = Brand.CategoryID,
                 Image = imagePath ?? "",
+                ProfileImage = profileImagePath ?? "",
                 SubscribeID = Brand.SubscribeID
             };
 
-            await _brand.Add(NewBrand);
-            await _brand.SaveChanges();
+            try
+            {
+                await _brand.Add(NewBrand);
+                await _brand.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error saving brand", error = ex.Message });
+            }
 
             return Ok(new { message = "Brand added successfully" });
         }
@@ -96,16 +140,21 @@ namespace FinalProject_ITI.Controllers
             if (existedBrand == null)
                 return NotFound(new { message = "Brand not found" });
 
-            // تحديث الصورة إن وُجدت
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+
             if (Brand.ImageFile != null && Brand.ImageFile.Length > 0)
             {
+                var extension = Path.GetExtension(Brand.ImageFile.FileName).ToLower();
+                if (!allowedExtensions.Contains(extension))
+                    return BadRequest(new { message = "Unsupported image format for ImageFile" });
+
                 try
                 {
                     var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Brands");
                     if (!Directory.Exists(uploadsFolder))
                         Directory.CreateDirectory(uploadsFolder);
 
-                    var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(Brand.ImageFile.FileName);
+                    var uniqueFileName = Guid.NewGuid().ToString() + extension;
                     var filePath = Path.Combine(uploadsFolder, uniqueFileName);
 
                     using (var fileStream = new FileStream(filePath, FileMode.Create))
@@ -113,7 +162,6 @@ namespace FinalProject_ITI.Controllers
                         await Brand.ImageFile.CopyToAsync(fileStream);
                     }
 
-                    // حذف الصورة القديمة
                     if (!string.IsNullOrEmpty(existedBrand.Image))
                     {
                         var oldImagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", existedBrand.Image.TrimStart('/'));
@@ -121,7 +169,7 @@ namespace FinalProject_ITI.Controllers
                             System.IO.File.Delete(oldImagePath);
                     }
 
-                    existedBrand.Image = "/Brands/" + uniqueFileName;
+                    existedBrand.Image = Path.Combine("Brands", uniqueFileName).Replace("\\", "/");
                 }
                 catch (Exception ex)
                 {
@@ -129,7 +177,41 @@ namespace FinalProject_ITI.Controllers
                 }
             }
 
-            // التحديثات الأخرى
+            if (Brand.ProfileImage != null && Brand.ProfileImage.Length > 0)
+            {
+                var extension = Path.GetExtension(Brand.ProfileImage.FileName).ToLower();
+                if (!allowedExtensions.Contains(extension))
+                    return BadRequest(new { message = "Unsupported image format for ProfileImage" });
+
+                try
+                {
+                    var profileFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Brands", "ProfileImages");
+                    if (!Directory.Exists(profileFolder))
+                        Directory.CreateDirectory(profileFolder);
+
+                    var uniqueFileName = Guid.NewGuid().ToString() + extension;
+                    var filePath = Path.Combine(profileFolder, uniqueFileName);
+
+                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await Brand.ProfileImage.CopyToAsync(fileStream);
+                    }
+
+                    if (!string.IsNullOrEmpty(existedBrand.ProfileImage))
+                    {
+                        var oldProfilePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", existedBrand.ProfileImage.TrimStart('/'));
+                        if (System.IO.File.Exists(oldProfilePath))
+                            System.IO.File.Delete(oldProfilePath);
+                    }
+
+                    existedBrand.ProfileImage = Path.Combine("Brands", "ProfileImages", uniqueFileName).Replace("\\", "/");
+                }
+                catch (Exception ex)
+                {
+                    return StatusCode(500, new { message = "Profile image upload failed", error = ex.Message });
+                }
+            }
+
             existedBrand.Name = Brand.Name;
             existedBrand.Description = Brand.Description;
             existedBrand.Address = Brand.Address;
@@ -143,30 +225,46 @@ namespace FinalProject_ITI.Controllers
             return Ok(new { message = "Brand updated successfully" });
         }
 
-        //Delete Brand
         [HttpDelete("delete/{id}")]
         public async Task<IActionResult> DeleteBrand(int id)
         {
             var existingBrand = await _brand.GetById(id);
             if (existingBrand == null)
             {
-                return NotFound("Brand not found");
+                return NotFound(new { message = "Brand not found" });
             }
 
-            // Delete image file from disk (if exists)
-            if (!string.IsNullOrEmpty(existingBrand.Image))
+            try
             {
-                var imagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", existingBrand.Image.TrimStart('/'));
-                if (System.IO.File.Exists(imagePath))
+                if (!string.IsNullOrEmpty(existingBrand.Image))
                 {
-                    System.IO.File.Delete(imagePath);
+                    var imagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", existingBrand.Image.TrimStart('/'));
+                    if (System.IO.File.Exists(imagePath))
+                    {
+                        System.IO.File.Delete(imagePath);
+                    }
                 }
-            }
 
-            _brand.Delete(existingBrand);
-            await _brand.SaveChanges();
-            return Ok(new { message = "Brand deleted successfully" });
+                if (!string.IsNullOrEmpty(existingBrand.ProfileImage))
+                {
+                    var profileImagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", existingBrand.ProfileImage.TrimStart('/'));
+                    if (System.IO.File.Exists(profileImagePath))
+                    {
+                        System.IO.File.Delete(profileImagePath);
+                    }
+                }
+
+                _brand.Delete(existingBrand);
+                await _brand.SaveChanges();
+
+                return Ok(new { message = "Brand deleted successfully" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error deleting brand", error = ex.Message });
+            }
         }
+
 
         [HttpGet("top")]
         public async Task<IActionResult> GetTopBrands()

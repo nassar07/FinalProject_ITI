@@ -31,6 +31,7 @@ public class DeliveryOrdersController : ControllerBase
                o.Id,
                o.OrderDate,
                o.Status,
+               o.PaymentMethod,
                o.UserID,
                o.DeliveryBoyID,
                OrderDetails = o.OrderDetails.Select(od => new
@@ -56,6 +57,7 @@ public class DeliveryOrdersController : ControllerBase
                 o.Id,
                 o.OrderDate,
                 o.Status,
+                o.PaymentMethod,
                 o.UserID,
                 o.DeliveryBoyID,
                 OrderDetails = o.OrderDetails.Select(od => new
@@ -83,6 +85,7 @@ public class DeliveryOrdersController : ControllerBase
                 o.Id,
                 o.OrderDate,
                 o.Status,
+                o.PaymentMethod,
                 o.UserID,
                 o.DeliveryBoyID,
                 OrderDetails = o.OrderDetails.Select(od => new
