@@ -10,6 +10,7 @@ public class BrandDTO
     public string? Address { get; set; }
     [FromForm]
     public IFormFile? ImageFile { get; set; }
+    public IFormFile? ProfileImage { get; set; }
     public int CategoryID { get; set; }
     public string OwnerID { get; set; }
     public int? SubscribeID { get; set; }

@@ -61,6 +61,7 @@ public class OrderController : ControllerBase
             o.Id,
             o.OrderDate,
             o.Status,
+            o.PaymentMethod,
             o.TotalAmount,
             o.UserID,
             o.DeliveryBoyID,
@@ -82,6 +83,7 @@ public class OrderController : ControllerBase
         {
             OrderDate = Order.OrderDate,
             Status = Order.Status,
+            PaymentMethod = Order.PaymentMethod,
             TotalAmount = Order.TotalAmount,
             OrderTypeID = Order.OrderTypeID,
             UserID = Order.UserID,
@@ -122,6 +124,7 @@ public class OrderController : ControllerBase
         // Update order properties
         existingOrder.OrderDate = Order.OrderDate;
         existingOrder.Status = Order.Status;
+        existingOrder.PaymentMethod = Order.PaymentMethod;
         existingOrder.TotalAmount = Order.TotalAmount;
         existingOrder.OrderTypeID = Order.OrderTypeID;
         existingOrder.UserID = Order.UserID;

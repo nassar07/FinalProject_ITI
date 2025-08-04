@@ -58,7 +58,7 @@ public class BazarBrandController : ControllerBase
     public async Task<IActionResult> GetBrandsInBazar(int bazarId)
     {
         var brands = await _BazarBrand.GetQuery().Where(bb => bb.BazarID == bazarId)
-            .Include(bb => bb.Brand) // eager load brand details
+            .Include(bb => bb.Brand)
             .Select(bb => new {
                 bb.Brand.Id,
                 bb.Brand.Name,

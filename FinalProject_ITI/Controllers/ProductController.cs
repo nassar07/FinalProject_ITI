@@ -84,10 +84,10 @@ public class ProductController : ControllerBase
     }
 
 
-    [HttpPut("update")]
-    public async Task<IActionResult> UpdateProduct([FromForm] ProductDTO productDto)
+    [HttpPut("update/{ID}")]
+    public async Task<IActionResult> UpdateProduct(int ID,[FromForm] ProductDTO productDto)
     {
-        var product = await _Product.GetById(productDto.Id);
+        var product = await _Product.GetById(ID);
         if (product == null)
             return BadRequest(new { message = "Product doesn't exist." });
 
