@@ -23,15 +23,19 @@ namespace FinalProject_ITI.Controllers
             var brands = await _brand.GetQuery()
                 .Include(b => b.Products)
                     .ThenInclude(p => p.Reviews)
-                .Select(b => new BrandDTO
+                .Select(b => new BrandReadDTO
                 {
                     Id = b.Id,
                     Name = b.Name,
                     Description = b.Description,
+                    Address = b.Address,
+                    ImageFile = b.Image,
+                    ProfileImage = b.ProfileImage,
+                    CategoryID = b.CategoryID,
                     ProductCount = b.Products.Count,
-                    AverageRating = b.Products
-                        .SelectMany(p => p.Reviews)
-                        .Average(r => (double?)r.Rating) ?? 0
+                    OwnerID = b.OwnerID,
+                    SubscribeID = b.SubscribeID,
+                    AverageRating = b.Products.SelectMany(p => p.Reviews).Average(r => (double?)r.Rating) ?? 0
                 })
                 .ToListAsync();
 
@@ -284,16 +288,19 @@ namespace FinalProject_ITI.Controllers
             var topBrands = await _brand.GetQuery().Include(b => b.Products)
                     .ThenInclude(p => p.Reviews)
                 .Where(b => b.Products.Any(p => p.Reviews.Any()))
-                .Select(b => new TopBrandDto
+                .Select(b => new BrandReadDTO
                 {
                     Id = b.Id,
                     Name = b.Name,
                     Description = b.Description,
-                    Image = b.Image,
+                    Address = b.Address,
+                    ImageFile = b.Image,
+                    ProfileImage = b.ProfileImage,
+                    CategoryID = b.CategoryID,
                     ProductCount = b.Products.Count,
-                    AverageRating = b.Products
-                        .SelectMany(p => p.Reviews)
-                        .Average(r => (double?)r.Rating) ?? 0
+                    OwnerID = b.OwnerID,
+                    SubscribeID = b.SubscribeID,
+                    AverageRating = b.Products.SelectMany(p => p.Reviews).Average(r => (double?)r.Rating) ?? 0
                 })
                 .OrderByDescending(b => b.AverageRating)
                 .Take(6)
