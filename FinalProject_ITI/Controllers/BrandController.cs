@@ -17,15 +17,27 @@ namespace FinalProject_ITI.Controllers
             _brand = brand;
         }
 
-        //Get All Brands
         [HttpGet("all")]
-        public async Task<IActionResult> GetAllBrands() {
+        public async Task<IActionResult> GetAllBrands()
+        {
+            var brands = await _brand.GetQuery()
+                .Include(b => b.Products)
+                    .ThenInclude(p => p.Reviews)
+                .Select(b => new BrandDTO
+                {
+                    Id = b.Id,
+                    Name = b.Name,
+                    Description = b.Description,
+                    ProductCount = b.Products.Count,
+                    AverageRating = b.Products
+                        .SelectMany(p => p.Reviews)
+                        .Average(r => (double?)r.Rating) ?? 0
+                })
+                .ToListAsync();
 
-            var brands = await _brand.GetAll();
             return Ok(brands);
         }
 
-        //Get Brand By Id
         [HttpGet("{id}")]
         public async Task<IActionResult>GetBrandById(int id)
         {

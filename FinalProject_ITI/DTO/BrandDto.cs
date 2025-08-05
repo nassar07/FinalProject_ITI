@@ -11,6 +11,8 @@ public class BrandDTO
     [FromForm]
     public IFormFile? ImageFile { get; set; }
     public IFormFile? ProfileImage { get; set; }
+    public int? ProductCount { get; set; }
+    public double? AverageRating { get; set; }
     public int CategoryID { get; set; }
     public string OwnerID { get; set; }
     public int? SubscribeID { get; set; }

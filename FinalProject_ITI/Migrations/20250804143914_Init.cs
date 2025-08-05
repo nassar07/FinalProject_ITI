@@ -226,6 +226,7 @@ namespace FinalProject_ITI.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     OrderDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Status = table.Column<int>(type: "int", nullable: false),
+                    PaymentMethod = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     TotalAmount = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
                     OrderTypeID = table.Column<int>(type: "int", nullable: true),
                     UserID = table.Column<string>(type: "nvarchar(450)", nullable: false),
@@ -263,6 +264,7 @@ namespace FinalProject_ITI.Migrations
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Address = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Image = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ProfileImage = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CategoryID = table.Column<int>(type: "int", nullable: false),
                     OwnerID = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     SubscribeID = table.Column<int>(type: "int", nullable: true)
@@ -389,7 +391,7 @@ namespace FinalProject_ITI.Migrations
                         column: x => x.BrandID,
                         principalTable: "Brands",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_OrderDetails_Orders_OrderID",
                         column: x => x.OrderID,
