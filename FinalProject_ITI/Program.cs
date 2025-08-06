@@ -2,6 +2,7 @@ using FinalProject_ITI.Helpers;
 using FinalProject_ITI.Models;
 using FinalProject_ITI.Repositories.Implementations;
 using FinalProject_ITI.Repositories.Interfaces;
+using FinalProject_ITI.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Stripe;
@@ -13,11 +14,12 @@ public class Program
     public static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
-
+        builder.Services.AddScoped<EmbeddingService>();
         StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
 
         builder.Services.AddDbContext<ITIContext>(options =>
-            options.UseSqlServer(builder.Configuration.GetConnectionString("finProCS")));
+            options.UseSqlServer(builder.Configuration.GetConnectionString("finProCS"),
+    sqlServerOptions => sqlServerOptions.UseNetTopologySuite()));
 
         builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
             .AddEntityFrameworkStores<ITIContext>();

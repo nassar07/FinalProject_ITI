@@ -1,4 +1,7 @@
-﻿namespace FinalProject_ITI.Models;
+﻿using Azure.Core.GeoJson;
+using System.ComponentModel.DataAnnotations.Schema;
+using GeoPoint = NetTopologySuite.Geometries.Point; 
+namespace FinalProject_ITI.Models;
 
 public class Product
 {
@@ -14,4 +17,7 @@ public class Product
 
     public ICollection<Review>? Reviews { get; set; }
     public ICollection<OrderDetail>? OrderDetails { get; set; }
+
+    [Column(TypeName = "geography")]
+    public GeoPoint Embedding { get; set; }
 }
