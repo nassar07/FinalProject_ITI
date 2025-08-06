@@ -12,6 +12,7 @@ public class BrandReadDTO
     public int? ProductCount { get; set; }
     public double? AverageRating { get; set; }
     public int CategoryID { get; set; }
+    public string CategoryName { get; set; }
     public string OwnerID { get; set; }
     public int? SubscribeID { get; set; }
 }

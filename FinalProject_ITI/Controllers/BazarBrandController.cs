@@ -60,7 +60,7 @@ public class BazarBrandController : ControllerBase
     {
         var brands = await _BazarBrand.GetQuery()
             .Where(bb => bb.BazarID == bazarId)
-            .Include(bb => bb.Brand)
+            .Include(bb => bb.Brand).ThenInclude(c=>c.Category)
             .Select(bb => new BrandReadDTO
             {
                 Id = bb.Brand.Id,
@@ -71,6 +71,7 @@ public class BazarBrandController : ControllerBase
                 ProfileImage = bb.Brand.ProfileImage,
                 CategoryID = bb.Brand.CategoryID,
                 ProductCount = bb.Brand.Products.Count,
+                CategoryName = bb.Brand.Category.Name,
                 OwnerID = bb.Brand.OwnerID,
                 SubscribeID = bb.Brand.SubscribeID,
                 AverageRating = bb.Brand.Products

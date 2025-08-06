@@ -20,9 +20,7 @@ namespace FinalProject_ITI.Controllers
         [HttpGet("all")]
         public async Task<IActionResult> GetAllBrands()
         {
-            var brands = await _brand.GetQuery()
-                .Include(b => b.Products)
-                    .ThenInclude(p => p.Reviews)
+            var brands = await _brand.GetQuery().Include(b=> b.Category).Include(b => b.Products).ThenInclude(p => p.Reviews)
                 .Select(b => new BrandReadDTO
                 {
                     Id = b.Id,
@@ -32,6 +30,7 @@ namespace FinalProject_ITI.Controllers
                     ImageFile = b.Image,
                     ProfileImage = b.ProfileImage,
                     CategoryID = b.CategoryID,
+                    CategoryName = b.Category.Name,
                     ProductCount = b.Products.Count,
                     OwnerID = b.OwnerID,
                     SubscribeID = b.SubscribeID,
@@ -285,8 +284,7 @@ namespace FinalProject_ITI.Controllers
         [HttpGet("top")]
         public async Task<IActionResult> GetTopBrands()
         {
-            var topBrands = await _brand.GetQuery().Include(b => b.Products)
-                    .ThenInclude(p => p.Reviews)
+            var topBrands = await _brand.GetQuery().Include(b=>b.Category).Include(b => b.Products).ThenInclude(p => p.Reviews)
                 .Where(b => b.Products.Any(p => p.Reviews.Any()))
                 .Select(b => new BrandReadDTO
                 {
@@ -297,6 +295,7 @@ namespace FinalProject_ITI.Controllers
                     ImageFile = b.Image,
                     ProfileImage = b.ProfileImage,
                     CategoryID = b.CategoryID,
+                    CategoryName = b.Category.Name,
                     ProductCount = b.Products.Count,
                     OwnerID = b.OwnerID,
                     SubscribeID = b.SubscribeID,
