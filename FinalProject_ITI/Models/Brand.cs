@@ -1,4 +1,8 @@
-﻿namespace FinalProject_ITI.Models;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.Drawing;
+using NetTopologySuite.Geometries;
+using GeoPoint = NetTopologySuite.Geometries.Point;
+namespace FinalProject_ITI.Models;
 
 public class Brand
 {
@@ -11,10 +15,13 @@ public class Brand
     public int CategoryID { get; set; }
     public string OwnerID { get; set; }
     public int? SubscribeID { get; set; }
+    public GeoPoint? Embedding { get; set; }
     public Category? Category { get; set; }
     public ApplicationUser? Owner { get; set; }
     public Subscribe? Subscribe { get; set; }
     public ICollection<OrderDetail>? OrderDetails { get; set; }
     public ICollection<Product>? Products { get; set; }
     public ICollection<BazarBrand>? BazarBrands { get; set; }
+
+
 }

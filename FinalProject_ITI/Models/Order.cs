@@ -1,4 +1,6 @@
-﻿namespace FinalProject_ITI.Models;
+﻿using NetTopologySuite.Geometries;
+using GeoPoint = NetTopologySuite.Geometries.Point;
+namespace FinalProject_ITI.Models;
 
 public class Order
 {
@@ -8,6 +10,7 @@ public class Order
     public string? PaymentMethod { get; set; }
     public decimal TotalAmount { get; set; }
     public int? OrderTypeID { get; set; }
+    public GeoPoint? Embedding { get; set; }
     public ICollection<OrderDetail> OrderDetails { get; set; }
     public string UserID { get; set; }
     public ApplicationUser? User { get; set; }

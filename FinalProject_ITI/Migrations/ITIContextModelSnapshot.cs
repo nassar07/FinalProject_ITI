@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using NetTopologySuite.Geometries;
 
 #nullable disable
 
@@ -173,6 +174,9 @@ namespace FinalProject_ITI.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<Point>("Embedding")
+                        .HasColumnType("geography");
+
                     b.Property<string>("Image")
                         .HasColumnType("nvarchar(max)");
 
@@ -209,6 +213,9 @@ namespace FinalProject_ITI.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<Point>("Embedding")
+                        .HasColumnType("geography");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -228,6 +235,9 @@ namespace FinalProject_ITI.Migrations
 
                     b.Property<string>("DeliveryBoyID")
                         .HasColumnType("nvarchar(450)");
+
+                    b.Property<Point>("Embedding")
+                        .HasColumnType("geography");
 
                     b.Property<DateTime>("OrderDate")
                         .HasColumnType("datetime2");
@@ -366,6 +376,10 @@ namespace FinalProject_ITI.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<Point>("Embedding")
+                        .IsRequired()
+                        .HasColumnType("geography");
+
                     b.Property<string>("Image")
                         .HasColumnType("nvarchar(max)");
 
@@ -406,6 +420,9 @@ namespace FinalProject_ITI.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<Point>("Embedding")
+                        .HasColumnType("geography");
 
                     b.Property<int>("ProductID")
                         .HasColumnType("int");

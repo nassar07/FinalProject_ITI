@@ -27,7 +27,7 @@ public class PaymentController : ControllerBase
         };
 
         var service = new PaymentIntentService();
-        var paymentIntent = service.Create(options);
+        var paymentIntent = service.Create(options);    
 
         return Ok(new { clientSecret = paymentIntent.ClientSecret });
     }

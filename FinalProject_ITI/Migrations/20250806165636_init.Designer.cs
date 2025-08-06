@@ -6,14 +6,15 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using NetTopologySuite.Geometries;
 
 #nullable disable
 
 namespace FinalProject_ITI.Migrations
 {
     [DbContext(typeof(ITIContext))]
-    [Migration("20250804081829_Init123")]
-    partial class Init123
+    [Migration("20250806165636_init")]
+    partial class init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -368,6 +369,10 @@ namespace FinalProject_ITI.Migrations
 
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<Point>("Embedding")
+                        .IsRequired()
+                        .HasColumnType("geography");
 
                     b.Property<string>("Image")
                         .HasColumnType("nvarchar(max)");

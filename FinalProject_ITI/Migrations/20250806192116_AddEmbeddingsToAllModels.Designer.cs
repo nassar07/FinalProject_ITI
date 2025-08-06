@@ -6,14 +6,15 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using NetTopologySuite.Geometries;
 
 #nullable disable
 
 namespace FinalProject_ITI.Migrations
 {
     [DbContext(typeof(ITIContext))]
-    [Migration("20250730084610_AddBrandOrderDetailRelation")]
-    partial class AddBrandOrderDetailRelation
+    [Migration("20250806192116_AddEmbeddingsToAllModels")]
+    partial class AddEmbeddingsToAllModels
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -176,6 +177,9 @@ namespace FinalProject_ITI.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<Point>("Embedding")
+                        .HasColumnType("geography");
+
                     b.Property<string>("Image")
                         .HasColumnType("nvarchar(max)");
 
@@ -186,6 +190,9 @@ namespace FinalProject_ITI.Migrations
                     b.Property<string>("OwnerID")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ProfileImage")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("SubscribeID")
                         .HasColumnType("int");
@@ -209,6 +216,9 @@ namespace FinalProject_ITI.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<Point>("Embedding")
+                        .HasColumnType("geography");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -229,11 +239,17 @@ namespace FinalProject_ITI.Migrations
                     b.Property<string>("DeliveryBoyID")
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<Point>("Embedding")
+                        .HasColumnType("geography");
+
                     b.Property<DateTime>("OrderDate")
                         .HasColumnType("datetime2");
 
                     b.Property<int?>("OrderTypeID")
                         .HasColumnType("int");
+
+                    b.Property<string>("PaymentMethod")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
@@ -363,6 +379,10 @@ namespace FinalProject_ITI.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<Point>("Embedding")
+                        .IsRequired()
+                        .HasColumnType("geography");
+
                     b.Property<string>("Image")
                         .HasColumnType("nvarchar(max)");
 
@@ -403,6 +423,9 @@ namespace FinalProject_ITI.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<Point>("Embedding")
+                        .HasColumnType("geography");
 
                     b.Property<int>("ProductID")
                         .HasColumnType("int");

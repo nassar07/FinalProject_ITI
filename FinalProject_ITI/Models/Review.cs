@@ -1,4 +1,6 @@
-﻿namespace FinalProject_ITI.Models;
+﻿using NetTopologySuite.Geometries;
+using GeoPoint = NetTopologySuite.Geometries.Point;
+namespace FinalProject_ITI.Models;
 
 public class Review
 {
@@ -8,6 +10,7 @@ public class Review
     public DateTime CreatedAt { get; set; }
     public string UserID { get; set; }
     public int ProductID { get; set; }
+    public GeoPoint? Embedding { get; set; }
     public ApplicationUser? User { get; set; }
     public Product? Product { get; set; }
 }
