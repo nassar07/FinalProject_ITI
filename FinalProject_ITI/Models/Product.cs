@@ -19,5 +19,5 @@ public class Product
     public ICollection<OrderDetail>? OrderDetails { get; set; }
 
     [Column(TypeName = "geography")]
-    public GeoPoint Embedding { get; set; }
+    public GeoPoint? Embedding { get; set; }
 }

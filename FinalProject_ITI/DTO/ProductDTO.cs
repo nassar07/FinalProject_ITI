@@ -12,6 +12,7 @@ public class ProductDTO
     public decimal Price { get; set; }
     public int Quantity { get; set; }
     public int BrandID { get; set; }
+
     public IFormFile? ImageFile { get; set; }
     public List<Review>? Reviews { get; set; }
     public List<OrderDetail>? OrderDetails { get; set; }

@@ -53,7 +53,6 @@ namespace FinalProject_ITI.Services
             }
         }
 
-        // وظيفة جديدة لإنشاء embeddings لجميع البيانات
         public async Task IndexAllData()
         {
             try
@@ -90,7 +89,10 @@ namespace FinalProject_ITI.Services
             try
             {
                 _logger.LogInformation("Indexing products");
-                var productsToIndex = await _dbContext.Products.Where(p => p.Embedding == null).ToListAsync();
+                var productsToIndex = await _dbContext.Products
+                    .Where(p => p.Embedding == null)
+                    .ToListAsync();
+
                 _logger.LogInformation("Found {Count} products to index", productsToIndex.Count);
 
                 foreach (var product in productsToIndex)
@@ -100,14 +102,25 @@ namespace FinalProject_ITI.Services
                         var textToEmbed = $"منتج: {product.Name} - وصف: {product.Description} - سعر: {product.Price}";
                         var response = await embeddingModel.EmbedContent(textToEmbed);
                         var vector = response.Embedding.Values.ToArray();
-                        product.Embedding = _geometryFactory.CreatePoint(new Coordinate(vector[0], vector[1]));
-                        _logger.LogInformation("Indexed product: {ProductName}", product.Name);
+
+                        if (vector.Length >= 2)
+                        {
+                            product.Embedding = _geometryFactory.CreatePoint(new Coordinate(vector[0], vector[1]));
+                            _logger.LogInformation("Indexed product: {ProductName}", product.Name);
+                        }
+                        else
+                        {
+                            _logger.LogWarning("Skipping product due to invalid embedding vector: {ProductName}", product.Name);
+                            continue; // تجاهل المنتج إذا لم يكن vector صالح
+                        }
                     }
                     catch (Exception ex)
                     {
                         _logger.LogError(ex, "Error indexing product: {ProductName}", product.Name);
                     }
                 }
+
+                // فقط المنتجات التي تمت معالجتها سيتم حفظها
                 await _dbContext.SaveChangesAsync();
             }
             catch (Exception ex)
@@ -241,7 +254,6 @@ namespace FinalProject_ITI.Services
             }
         }
 
-        // وظيفة قديمة للتوافق مع الكود الحالي
         public async Task IndexAllProducts()
         {
             await IndexAllData();
