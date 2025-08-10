@@ -1,345 +1,298 @@
-﻿using Mscc.GenerativeAI;
-using NetTopologySuite.Geometries;
-using Microsoft.EntityFrameworkCore;
-using GeoPoint = NetTopologySuite.Geometries.Point;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using FinalProject_ITI.Models;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Mscc.GenerativeAI;
+
 namespace FinalProject_ITI.Services
 {
     public class EmbeddingService
     {
         private readonly GoogleAI _googleAI;
         private readonly ITIContext _dbContext;
-        private readonly GeometryFactory _geometryFactory;
         private readonly ILogger<EmbeddingService> _logger;
+        private readonly GenerativeModel _embeddingModel;
 
-        public EmbeddingService(IConfiguration configuration, ITIContext dbContext, ILogger<EmbeddingService> logger)
+        public EmbeddingService(GoogleAI googleAI, ITIContext dbContext, ILogger<EmbeddingService> logger)
         {
-            var apiKey = configuration["Gemini:ApiKey"];
-            if (string.IsNullOrEmpty(apiKey)) throw new InvalidOperationException("Gemini API Key is not configured.");
-
-            _googleAI = new GoogleAI(apiKey);
-            _dbContext = dbContext;
-            _geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
+            _googleAI = googleAI ?? throw new ArgumentNullException(nameof(googleAI));
+            _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
             _logger = logger;
+            _embeddingModel = _googleAI.GenerativeModel(model: "embedding-001"); // عدّل لو موديل مختلف
         }
 
-        public async Task<string> GetChatbotResponse(string userQuery)
+        // Public method to index everything
+        public async Task IndexAllDataAsync()
+        {
+            _logger.LogInformation("IndexAllDataAsync started");
+            await IndexProductsAsync();
+            await IndexBrandsAsync();
+            await IndexCategoriesAsync();
+            await IndexOrdersAsync();
+            await IndexOrderDetailsAsync();
+            await IndexReviewsAsync();
+            await IndexSubscribesAsync();
+            await IndexBazarsAsync();
+            await IndexBazarBrandsAsync();
+            await IndexPaymentsAsync();
+            _logger.LogInformation("IndexAllDataAsync finished");
+            await _dbContext.SaveChangesAsync();
+        }
+
+        // --------- Index helpers for each entity (build content and call Upsert) ----------
+        private async Task IndexProductsAsync()
+        {
+            var items = await _dbContext.Products.AsNoTracking().ToListAsync();
+            foreach (var p in items)
+            {
+                var content = $"منتج: {p.Name}\nالوصف: {p.Description}\nالسعر: {p.Price}\nالكمية: {p.Quantity}";
+                await UpsertDocumentEmbeddingAsync("Product", p.Id.ToString(), $"Product:{p.Id} - {p.Name}", content);
+            }
+        }
+
+        private async Task IndexBrandsAsync()
+        {
+            var items = await _dbContext.Brands.AsNoTracking().ToListAsync();
+            foreach (var b in items)
+            {
+                var content = $"علامة تجارية: {b.Name}\nالوصف: {b.Description}\nالعنوان: {b.Address}";
+                await UpsertDocumentEmbeddingAsync("Brand", b.Id.ToString(), $"Brand:{b.Id} - {b.Name}", content);
+            }
+        }
+
+        private async Task IndexCategoriesAsync()
+        {
+            var items = await _dbContext.Categories.AsNoTracking().ToListAsync();
+            foreach (var c in items)
+            {
+                var content = $"فئة: {c.Name}\nالوصف: {c.Id}";
+                await UpsertDocumentEmbeddingAsync("Category", c.Id.ToString(), $"Category:{c.Id} - {c.Name}", content);
+            }
+        }
+
+        private async Task IndexOrdersAsync()
+        {
+            var items = await _dbContext.Orders
+                .Include(o => o.OrderDetails) // إذا عندك relation
+                .AsNoTracking()
+                .ToListAsync();
+
+            foreach (var o in items)
+            {
+                var details = new StringBuilder();
+                if (o.OrderDetails != null && o.OrderDetails.Any())
+                {
+                    foreach (var d in o.OrderDetails)
+                    {
+                        details.AppendLine($"منتجId:{d.ProductID} - كمية:{d.Quantity} - سعر:{d.Price}");
+                    }
+                }
+
+                var content = $"طلب: {o.Id}\nالتاريخ: {o.OrderDate}\nالحالة: {o.Status}\nالمبلغ الكلي: {o.TotalAmount}\nتفاصيل:\n{details}";
+                await UpsertDocumentEmbeddingAsync("Order", o.Id.ToString(), $"Order:{o.Id}", content);
+            }
+        }
+
+        private async Task IndexOrderDetailsAsync()
+        {
+            var items = await _dbContext.OrderDetails.AsNoTracking().ToListAsync();
+            foreach (var od in items)
+            {
+                var content = $"OrderDetail: Id:{od.Id}\nOrderId:{od.OrderID}\nProductId:{od.ProductID}\nPrice:{od.Price}\nQuantity:{od.Quantity}";
+                await UpsertDocumentEmbeddingAsync("OrderDetail", od.Id.ToString(), $"OrderDetail:{od.Id}", content);
+            }
+        }
+
+        private async Task IndexReviewsAsync()
+        {
+            var items = await _dbContext.Reviews.AsNoTracking().ToListAsync();
+            foreach (var r in items)
+            {
+                var content = $"مراجعة من المستخدم: {r.UserID}\nالتعليق: {r.Comment}\nالتقييم: {r.Rating}";
+                await UpsertDocumentEmbeddingAsync("Review", r.Id.ToString(), $"Review:{r.Id}", content);
+            }
+        }
+
+        private async Task IndexSubscribesAsync()
+        {
+            var items = await _dbContext.Subscribes.AsNoTracking().ToListAsync();
+            foreach (var s in items)
+            {
+                var content = $"اشتراك: {s.Id}\nالاسم: {s.PlanName}\nالسعر: {s.Price}";
+                await UpsertDocumentEmbeddingAsync("Subscribe", s.Id.ToString(), $"Subscribe:{s.Id}", content);
+            }
+        }
+
+        private async Task IndexBazarsAsync()
+        {
+            var items = await _dbContext.Bazars.AsNoTracking().ToListAsync();
+            foreach (var b in items)
+            {
+                var content = $"بازار: {b.Id}\nالاسم: {b.BazarBrands}\nالوصف: {b.Title}";
+                await UpsertDocumentEmbeddingAsync("Bazar", b.Id.ToString(), $"Bazar:{b.Id}", content);
+            }
+        }
+
+        private async Task IndexBazarBrandsAsync()
+        {
+            var items = await _dbContext.BazarBrands.AsNoTracking().ToListAsync();
+            foreach (var bb in items)
+            {
+                var content = $"BazarBrand: Id:{bb.Id}\nBazarId:{bb.BazarID}\nBrandId:{bb.BrandID}";
+                await UpsertDocumentEmbeddingAsync("BazarBrand", bb.Id.ToString(), $"BazarBrand:{bb.Id}", content);
+            }
+        }
+
+        private async Task IndexPaymentsAsync()
+        {
+            var items = await _dbContext.Payments.AsNoTracking().ToListAsync();
+            foreach (var p in items)
+            {
+                var content = $"مدفوعات: Id:{p.Id}\nOrderId:{p.OrderID}\nالمبلغ:{p.PaymentMethod}\nالحالة:{p.PaymentStatus}";
+                await UpsertDocumentEmbeddingAsync("Payment", p.Id.ToString(), $"Payment:{p.Id}", content);
+            }
+        }
+
+        // --------- Upsert single DocumentEmbedding ----------
+        private async Task UpsertDocumentEmbeddingAsync(string entityType, string entityId, string source, string content)
         {
             try
             {
-                var context = await FindMostRelevantContext(userQuery);
+                var existing = await _dbContext.DocumentEmbeddings
+                    .FirstOrDefaultAsync(d => d.EntityType == entityType && d.EntityId == entityId);
 
-                var prompt = $@"You are an AI assistant. Answer the user's question based ONLY on the provided context.
-    
-    CONTEXT:
-    ---
-    {context}
-    ---
+                // generate embedding
+                var resp = await _embeddingModel.EmbedContent(content);
+                var vector = resp?.Embedding?.Values?.ToArray();
+                if (vector == null || vector.Length == 0)
+                {
+                    _logger.LogWarning("Empty embedding for {Source}", source);
+                    return;
+                }
 
-    QUESTION: {userQuery}
+                var bytes = FloatArrayToBytes(vector);
 
-    ANSWER:";
-
-                _logger.LogInformation("Using model: gemini-1.5-flash");
-                var chatModel = _googleAI.GenerativeModel(model: "gemini-1.5-flash");
-                var response = await chatModel.GenerateContent(prompt);
-
-                return response.Text;
+                if (existing == null)
+                {
+                    var doc = new DocumentEmbedding
+                    {
+                        Id = Guid.NewGuid(),
+                        EntityType = entityType,
+                        EntityId = entityId,
+                        Source = source,
+                        Content = content,
+                        Embedding = bytes,
+                        Dimension = vector.Length,
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    _dbContext.DocumentEmbeddings.Add(doc);
+                }
+                else
+                {
+                    existing.Embedding = bytes;
+                    existing.Dimension = vector.Length;
+                    existing.UpdatedAt = DateTime.UtcNow;
+                    _dbContext.DocumentEmbeddings.Update(existing);
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error in GetChatbotResponse");
-                return "عذراً، حدث خطأ في معالجة طلبك. يرجى المحاولة مرة أخرى.";
+                _logger.LogError(ex, "Error indexing {EntityType}:{EntityId}", entityType, entityId);
             }
         }
 
-        // وظيفة جديدة لإنشاء embeddings لجميع البيانات
-        public async Task IndexAllData()
+        // --------- Retrieval ----------
+        public async Task<List<ContextChunk>> GetTopKContextChunksAsync(string query, int k = 6)
         {
-            try
+            var qResp = await _embeddingModel.EmbedContent(query);
+            var qVec = qResp?.Embedding?.Values?.ToArray();
+            if (qVec == null || qVec.Length == 0)
             {
-                _logger.LogInformation("Starting comprehensive data indexing");
-                var embeddingModel = _googleAI.GenerativeModel(model: "embedding-001");
-
-                // إنشاء embeddings للمنتجات
-                await IndexProducts(embeddingModel);
-                
-                // إنشاء embeddings للعلامات التجارية
-                await IndexBrands(embeddingModel);
-                
-                // إنشاء embeddings للفئات
-                await IndexCategories(embeddingModel);
-                
-                // إنشاء embeddings للطلبات
-                await IndexOrders(embeddingModel);
-                
-                // إنشاء embeddings للمراجعات
-                await IndexReviews(embeddingModel);
-
-                _logger.LogInformation("Comprehensive data indexing completed");
+                _logger.LogWarning("Query embedding empty");
+                return new List<ContextChunk>();
             }
-            catch (Exception ex)
+
+            var candidates = await _dbContext.DocumentEmbeddings
+                .AsNoTracking()
+                .Where(d => d.Embedding != null)
+                .ToListAsync();
+
+            var scored = new List<(DocumentEmbedding doc, float score)>();
+            foreach (var c in candidates)
             {
-                _logger.LogError(ex, "Error in IndexAllData");
-                throw;
+                try
+                {
+                    var vec = BytesToFloatArray(c.Embedding!);
+                    if (vec.Length != qVec.Length) continue;
+                    var sim = CosineSimilarity(qVec, vec);
+                    scored.Add((c, sim));
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error computing similarity for doc {Id}", c.Id);
+                }
             }
+
+            var top = scored.OrderByDescending(x => x.score).Take(k).ToList();
+
+            return top.Select(x => new ContextChunk
+            {
+                DocumentId = x.doc.Id,
+                Source = x.doc.Source,
+                Text = x.doc.Content,
+                Score = x.score,
+                Dimension = x.doc.Dimension
+            }).ToList();
         }
 
-        private async Task IndexProducts(GenerativeModel embeddingModel)
+        public async Task<string> FindMostRelevantContext(string query, int k = 6)
         {
-            try
-            {
-                _logger.LogInformation("Indexing products");
-                var productsToIndex = await _dbContext.Products.Where(p => p.Embedding == null).ToListAsync();
-                _logger.LogInformation("Found {Count} products to index", productsToIndex.Count);
+            var chunks = await GetTopKContextChunksAsync(query, k);
+            if (chunks == null || !chunks.Any()) return string.Empty;
 
-                foreach (var product in productsToIndex)
-                {
-                    try
-                    {
-                        var textToEmbed = $"منتج: {product.Name} - وصف: {product.Description} - سعر: {product.Price}";
-                        var response = await embeddingModel.EmbedContent(textToEmbed);
-                        var vector = response.Embedding.Values.ToArray();
-                        product.Embedding = _geometryFactory.CreatePoint(new Coordinate(vector[0], vector[1]));
-                        _logger.LogInformation("Indexed product: {ProductName}", product.Name);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "Error indexing product: {ProductName}", product.Name);
-                    }
-                }
-                await _dbContext.SaveChangesAsync();
-            }
-            catch (Exception ex)
+            var sb = new StringBuilder();
+            foreach (var c in chunks)
             {
-                _logger.LogError(ex, "Error in IndexProducts");
+                sb.AppendLine($"[Source: {c.Source}] (score: {c.Score:F3})");
+                sb.AppendLine(c.Text);
+                sb.AppendLine("\n---\n");
             }
+            return sb.ToString();
         }
 
-        private async Task IndexBrands(GenerativeModel embeddingModel)
+        // ---------- helpers ----------
+        private static byte[] FloatArrayToBytes(float[] arr)
         {
-            try
-            {
-                _logger.LogInformation("Indexing brands");
-                var brandsToIndex = await _dbContext.Brands.Where(b => b.Embedding == null).ToListAsync();
-                _logger.LogInformation("Found {Count} brands to index", brandsToIndex.Count);
-
-                foreach (var brand in brandsToIndex)
-                {
-                    try
-                    {
-                        var category = await _dbContext.Categories.FirstOrDefaultAsync(c => c.Id == brand.CategoryID);
-                        var textToEmbed = $"علامة تجارية: {brand.Name} - وصف: {brand.Description} - عنوان: {brand.Address} - فئة: {category?.Name}";
-                        var response = await embeddingModel.EmbedContent(textToEmbed);
-                        var vector = response.Embedding.Values.ToArray();
-                        brand.Embedding = _geometryFactory.CreatePoint(new Coordinate(vector[0], vector[1]));
-                        _logger.LogInformation("Indexed brand: {BrandName}", brand.Name);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "Error indexing brand: {BrandName}", brand.Name);
-                    }
-                }
-                await _dbContext.SaveChangesAsync();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error in IndexBrands");
-            }
+            var bytes = new byte[arr.Length * 4];
+            for (int i = 0; i < arr.Length; i++)
+                Buffer.BlockCopy(BitConverter.GetBytes(arr[i]), 0, bytes, i * 4, 4);
+            return bytes;
         }
 
-        private async Task IndexCategories(GenerativeModel embeddingModel)
+        private static float[] BytesToFloatArray(byte[] bytes)
         {
-            try
-            {
-                _logger.LogInformation("Indexing categories");
-                var categoriesToIndex = await _dbContext.Categories.Where(c => c.Embedding == null).ToListAsync();
-                _logger.LogInformation("Found {Count} categories to index", categoriesToIndex.Count);
-
-                foreach (var category in categoriesToIndex)
-                {
-                    try
-                    {
-                        var textToEmbed = $"فئة: {category.Name}";
-                        var response = await embeddingModel.EmbedContent(textToEmbed);
-                        var vector = response.Embedding.Values.ToArray();
-                        category.Embedding = _geometryFactory.CreatePoint(new Coordinate(vector[0], vector[1]));
-                        _logger.LogInformation("Indexed category: {CategoryName}", category.Name);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "Error indexing category: {CategoryName}", category.Name);
-                    }
-                }
-                await _dbContext.SaveChangesAsync();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error in IndexCategories");
-            }
+            var n = bytes.Length / 4;
+            var arr = new float[n];
+            for (int i = 0; i < n; i++)
+                arr[i] = BitConverter.ToSingle(bytes, i * 4);
+            return arr;
         }
 
-        private async Task IndexOrders(GenerativeModel embeddingModel)
+        private static float CosineSimilarity(float[] a, float[] b)
         {
-            try
+            double dot = 0, na = 0, nb = 0;
+            for (int i = 0; i < a.Length; i++)
             {
-                _logger.LogInformation("Indexing orders");
-                var ordersToIndex = await _dbContext.Orders.Where(o => o.Embedding == null).ToListAsync();
-                _logger.LogInformation("Found {Count} orders to index", ordersToIndex.Count);
-
-                foreach (var order in ordersToIndex)
-                {
-                    try
-                    {
-                        var textToEmbed = $"طلب رقم: {order.Id} - تاريخ: {order.OrderDate} - الحالة: {order.Status} - المبلغ الإجمالي: {order.TotalAmount} - طريقة الدفع: {order.PaymentMethod}";
-                        var response = await embeddingModel.EmbedContent(textToEmbed);
-                        var vector = response.Embedding.Values.ToArray();
-                        order.Embedding = _geometryFactory.CreatePoint(new Coordinate(vector[0], vector[1]));
-                        _logger.LogInformation("Indexed order: {OrderId}", order.Id);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "Error indexing order: {OrderId}", order.Id);
-                    }
-                }
-                await _dbContext.SaveChangesAsync();
+                dot += a[i] * b[i];
+                na += a[i] * a[i];
+                nb += b[i] * b[i];
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error in IndexOrders");
-            }
-        }
-
-        private async Task IndexReviews(GenerativeModel embeddingModel)
-        {
-            try
-            {
-                _logger.LogInformation("Indexing reviews");
-                var reviewsToIndex = await _dbContext.Reviews.Where(r => r.Embedding == null).ToListAsync();
-                _logger.LogInformation("Found {Count} reviews to index", reviewsToIndex.Count);
-
-                foreach (var review in reviewsToIndex)
-                {
-                    try
-                    {
-                        var textToEmbed = $"مراجعة: {review.Comment} - التقييم: {review.Rating}";
-                        var response = await embeddingModel.EmbedContent(textToEmbed);
-                        var vector = response.Embedding.Values.ToArray();
-                        review.Embedding = _geometryFactory.CreatePoint(new Coordinate(vector[0], vector[1]));
-                        _logger.LogInformation("Indexed review: {ReviewId}", review.Id);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "Error indexing review: {ReviewId}", review.Id);
-                    }
-                }
-                await _dbContext.SaveChangesAsync();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error in IndexReviews");
-            }
-        }
-
-        // وظيفة قديمة للتوافق مع الكود الحالي
-        public async Task IndexAllProducts()
-        {
-            await IndexAllData();
-        }
-
-        public async Task<string> FindMostRelevantContext(string userQuery)
-        {
-            try
-            {
-                _logger.LogInformation("Finding relevant context for query: {Query}", userQuery);
-                var embeddingModel = _googleAI.GenerativeModel(model: "embedding-001");
-                var queryResponse = await embeddingModel.EmbedContent(userQuery);
-                var queryVector = queryResponse.Embedding.Values.ToArray();
-                var queryPoint = _geometryFactory.CreatePoint(new Coordinate(queryVector[0], queryVector[1]));
-
-                var contextParts = new List<string>();
-
-                // البحث في المنتجات
-                var topProducts = await _dbContext.Products
-                    .Where(p => p.Embedding != null)
-                    .OrderBy(p => p.Embedding.Distance(queryPoint))
-                    .Take(2)
-                    .ToListAsync();
-
-                if (topProducts.Any())
-                {
-                    var productsContext = string.Join("\n---\n", topProducts.Select(p => $"منتج: {p.Name}\nالوصف: {p.Description}\nالسعر: {p.Price}"));
-                    contextParts.Add($"المنتجات ذات الصلة:\n{productsContext}");
-                }
-
-                // البحث في العلامات التجارية
-                var topBrands = await _dbContext.Brands
-                    .Where(b => b.Embedding != null)
-                    .OrderBy(b => b.Embedding.Distance(queryPoint))
-                    .Take(2)
-                    .ToListAsync();
-
-                if (topBrands.Any())
-                {
-                    var brandsContext = string.Join("\n---\n", topBrands.Select(b => $"علامة تجارية: {b.Name}\nالوصف: {b.Description}\nالعنوان: {b.Address}"));
-                    contextParts.Add($"العلامات التجارية ذات الصلة:\n{brandsContext}");
-                }
-
-                // البحث في الفئات
-                var topCategories = await _dbContext.Categories
-                    .Where(c => c.Embedding != null)
-                    .OrderBy(c => c.Embedding.Distance(queryPoint))
-                    .Take(2)
-                    .ToListAsync();
-
-                if (topCategories.Any())
-                {
-                    var categoriesContext = string.Join("\n---\n", topCategories.Select(c => $"فئة: {c.Name}"));
-                    contextParts.Add($"الفئات ذات الصلة:\n{categoriesContext}");
-                }
-
-                // البحث في الطلبات
-                var topOrders = await _dbContext.Orders
-                    .Where(o => o.Embedding != null)
-                    .OrderBy(o => o.Embedding.Distance(queryPoint))
-                    .Take(2)
-                    .ToListAsync();
-
-                if (topOrders.Any())
-                {
-                    var ordersContext = string.Join("\n---\n", topOrders.Select(o => $"طلب رقم: {o.Id}\nالتاريخ: {o.OrderDate}\nالحالة: {o.Status}\nالمبلغ: {o.TotalAmount}"));
-                    contextParts.Add($"الطلبات ذات الصلة:\n{ordersContext}");
-                }
-
-                // البحث في المراجعات
-                var topReviews = await _dbContext.Reviews
-                    .Where(r => r.Embedding != null)
-                    .OrderBy(r => r.Embedding.Distance(queryPoint))
-                    .Take(2)
-                    .ToListAsync();
-
-                if (topReviews.Any())
-                {
-                    var reviewsContext = string.Join("\n---\n", topReviews.Select(r => $"مراجعة: {r.Comment}\nالتقييم: {r.Rating}"));
-                    contextParts.Add($"المراجعات ذات الصلة:\n{reviewsContext}");
-                }
-
-                if (!contextParts.Any())
-                {
-                    _logger.LogWarning("No relevant data found for query: {Query}", userQuery);
-                    return "لم يتم العثور على معلومات ذات صلة في قاعدة البيانات.";
-                }
-
-                var context = string.Join("\n\n", contextParts);
-                _logger.LogInformation("Found relevant data from multiple sources");
-                return context;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error in FindMostRelevantContext");
-                return "عذراً، حدث خطأ في البحث عن المعلومات ذات الصلة.";
-            }
+            var denom = Math.Sqrt(na) * Math.Sqrt(nb) + 1e-8;
+            return (float)(dot / denom);
         }
     }
 }
-

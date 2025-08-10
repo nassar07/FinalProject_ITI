@@ -6,6 +6,7 @@ using FinalProject_ITI.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Stripe;
+using Mscc.GenerativeAI;
 
 namespace FinalProject_ITI;
 
@@ -47,8 +48,20 @@ public class Program
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
+        builder.Services.AddHttpClient<ChatService>(); // ????? ??????
+
+        builder.Services.AddSingleton<GoogleAI>(sp =>
+        {
+            var cfg = sp.GetRequiredService<IConfiguration>();
+            var key = cfg["Gemini:ApiKey"];
+            if (string.IsNullOrEmpty(key))
+                throw new InvalidOperationException("Gemini API Key not configured. Set Gemini:ApiKey in config or env.");
+            return new GoogleAI(key);
+        });
+        builder.Services.AddScoped<EmbeddingService>();
 
         var app = builder.Build();
+
 
         await SeedRoles.SeedRolesAndAdminAsync(app);
 
@@ -59,6 +72,9 @@ public class Program
             app.UseSwaggerUI();
         }
         app.UseStaticFiles();
+
+
+
 
         app.UseCors(builder =>
         {
