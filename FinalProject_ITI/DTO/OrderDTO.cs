@@ -13,4 +13,7 @@ public class OrderDTO
     public string UserID { get; set; }
     public string? DeliveryBoyID { get; set; }
     public ICollection<OrderDetailsDTO> OrderDetails { get; set; }
+    public bool IsDeliveryFeesCollected { get; set; } = false;
+    public bool IsCashDeliveredToBrand { get; set; } = false;
+    public Payment? Payment { get; set; }
 }

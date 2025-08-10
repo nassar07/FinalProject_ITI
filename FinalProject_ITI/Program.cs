@@ -1,11 +1,15 @@
-using FinalProject_ITI.Helpers;
+﻿using FinalProject_ITI.Helpers;
 using FinalProject_ITI.Models;
 using FinalProject_ITI.Repositories.Implementations;
 using FinalProject_ITI.Repositories.Interfaces;
 using FinalProject_ITI.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Stripe;
+using System.Security.Claims;
+using System.Text;
 
 namespace FinalProject_ITI;
 
@@ -35,8 +39,41 @@ public class Program
             options.Password.RequiredLength = 6;
             options.User.RequireUniqueEmail = true;
         });
+      
+        builder.Services
+        .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+          .AddJwtBearer(options =>
+          {
+              options.TokenValidationParameters = new TokenValidationParameters
+              {
+                  ValidateIssuer = true,
+                  ValidateAudience = true,
+                  ValidateLifetime = true,
+                  ValidateIssuerSigningKey = true,
+                  ValidIssuer = "http://localhost:5066/",
+                  ValidAudience = "any",
+                  IssuerSigningKey = new SymmetricSecurityKey(
+                    Encoding.UTF8.GetBytes("hfsbvdfjknsfkns@44&&%%$$dcskln1548vkls2sdbfbdnklf554d$$##")
+                  ),
+              };
+          });
 
-        // Add services to the container.
+        builder.Services.ConfigureApplicationCookie(options =>
+        {
+            options.Events.OnRedirectToLogin = ctx =>
+            {
+                ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                return Task.CompletedTask;
+            };
+            options.Events.OnRedirectToAccessDenied = ctx =>
+            {
+                ctx.Response.StatusCode = StatusCodes.Status403Forbidden;
+                return Task.CompletedTask;
+            };
+        });
+
+        builder.Services.AddAuthorization();
+
         builder.Services.AddControllers()
         .AddJsonOptions(options =>
         {

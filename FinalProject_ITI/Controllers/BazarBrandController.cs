@@ -20,7 +20,7 @@ public class BazarBrandController : ControllerBase
         _BazarBrand = BazarBrand;
         _BazarBrandRepository = BazarBrandRepository;
     }
-
+    [AllowAnonymous]
     [HttpPost("AddBrandToBazar/{BazarId}/{BrandId}")]
     public async Task<IActionResult> AddBrandToBazar(int BazarId, int BrandId)
     {
@@ -54,7 +54,7 @@ public class BazarBrandController : ControllerBase
 
         return Ok(new { message = "Brand removed from Bazar." });
     }
-
+    [AllowAnonymous]
     [HttpGet("{bazarId}/brands")]
     public async Task<IActionResult> GetBrandsInBazar(int bazarId)
     {

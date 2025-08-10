@@ -10,8 +10,8 @@ namespace FinalProject_ITI.Controllers;
 [ApiController]
 public class DeliveryOrdersController : ControllerBase
 {
-    private readonly IRepository<Order> _Order;
     private readonly UserManager<ApplicationUser> _UserManager;
+    private readonly IRepository<Order> _Order;
     private readonly IRepository<ApplicationUser> _User;
     public DeliveryOrdersController(IRepository<Order> Order, UserManager<ApplicationUser> UserManager, IRepository<ApplicationUser> User)
     {
@@ -34,6 +34,9 @@ public class DeliveryOrdersController : ControllerBase
                o.PaymentMethod,
                o.UserID,
                o.DeliveryBoyID,
+               o.IsCashDeliveredToBrand,
+               o.IsDeliveryFeesCollected,
+               o.TotalAmount,
                OrderDetails = o.OrderDetails.Select(od => new
                {
                    od.ProductID,
@@ -60,6 +63,9 @@ public class DeliveryOrdersController : ControllerBase
                 o.PaymentMethod,
                 o.UserID,
                 o.DeliveryBoyID,
+                o.IsCashDeliveredToBrand,
+                o.IsDeliveryFeesCollected,
+                o.TotalAmount,
                 OrderDetails = o.OrderDetails.Select(od => new
                 {
                     od.ProductID,
@@ -76,9 +82,12 @@ public class DeliveryOrdersController : ControllerBase
     public async Task<IActionResult> GetMyOrders(string deliveryBoyId)
     {
         var orders = await _Order.GetQuery()
-            .Where(o => o.Status == OrderStatus.Delivered ||
-            o.Status == OrderStatus.Cancelled &&
-            o.DeliveryBoyID == deliveryBoyId)
+          .Where(o =>
+                (o.Status == OrderStatus.Delivered ||
+                 o.Status == OrderStatus.Cancelled ||
+                 o.Status == OrderStatus.CashDelivered) &&
+                o.DeliveryBoyID == deliveryBoyId
+            )
             .Include(o => o.OrderDetails)
             .Select(o => new
             {
@@ -88,6 +97,9 @@ public class DeliveryOrdersController : ControllerBase
                 o.PaymentMethod,
                 o.UserID,
                 o.DeliveryBoyID,
+                o.IsCashDeliveredToBrand,
+                o.IsDeliveryFeesCollected,
+                o.TotalAmount,
                 OrderDetails = o.OrderDetails.Select(od => new
                 {
                     od.ProductID,

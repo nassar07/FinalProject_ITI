@@ -9,5 +9,8 @@ public enum OrderStatus
     DeliveryBrandHandingRequest,//4
     DeliveryUserHandingRequest,//5
     UserDeliveryHandingRequest,//6
-    Returning//7
+    Returning,//7
+    CashOntheWay,//8
+    CashDelivered,//9
+    CashToBrandHandingRequest,//10
 }
