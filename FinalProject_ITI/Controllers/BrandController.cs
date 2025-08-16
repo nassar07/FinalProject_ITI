@@ -17,15 +17,30 @@ namespace FinalProject_ITI.Controllers
             _brand = brand;
         }
 
-        //Get All Brands
         [HttpGet("all")]
-        public async Task<IActionResult> GetAllBrands() {
+        public async Task<IActionResult> GetAllBrands()
+        {
+            var brands = await _brand.GetQuery().Include(b=> b.Category).Include(b => b.Products).ThenInclude(p => p.Reviews)
+                .Select(b => new BrandReadDTO
+                {
+                    Id = b.Id,
+                    Name = b.Name,
+                    Description = b.Description,
+                    Address = b.Address,
+                    ImageFile = b.Image,
+                    ProfileImage = b.ProfileImage,
+                    CategoryID = b.CategoryID,
+                    CategoryName = b.Category.Name,
+                    ProductCount = b.Products.Count,
+                    OwnerID = b.OwnerID,
+                    SubscribeID = b.SubscribeID,
+                    AverageRating = b.Products.SelectMany(p => p.Reviews).Average(r => (double?)r.Rating) ?? 0
+                })
+                .ToListAsync();
 
-            var brands = await _brand.GetAll();
             return Ok(brands);
         }
 
-        //Get Brand By Id
         [HttpGet("{id}")]
         public async Task<IActionResult>GetBrandById(int id)
         {
@@ -269,19 +284,22 @@ namespace FinalProject_ITI.Controllers
         [HttpGet("top")]
         public async Task<IActionResult> GetTopBrands()
         {
-            var topBrands = await _brand.GetQuery().Include(b => b.Products)
-                    .ThenInclude(p => p.Reviews)
+            var topBrands = await _brand.GetQuery().Include(b=>b.Category).Include(b => b.Products).ThenInclude(p => p.Reviews)
                 .Where(b => b.Products.Any(p => p.Reviews.Any()))
-                .Select(b => new TopBrandDto
+                .Select(b => new BrandReadDTO
                 {
                     Id = b.Id,
                     Name = b.Name,
                     Description = b.Description,
-                    Image = b.Image,
+                    Address = b.Address,
+                    ImageFile = b.Image,
+                    ProfileImage = b.ProfileImage,
+                    CategoryID = b.CategoryID,
+                    CategoryName = b.Category.Name,
                     ProductCount = b.Products.Count,
-                    AverageRating = b.Products
-                        .SelectMany(p => p.Reviews)
-                        .Average(r => (double?)r.Rating) ?? 0
+                    OwnerID = b.OwnerID,
+                    SubscribeID = b.SubscribeID,
+                    AverageRating = b.Products.SelectMany(p => p.Reviews).Average(r => (double?)r.Rating) ?? 0
                 })
                 .OrderByDescending(b => b.AverageRating)
                 .Take(6)

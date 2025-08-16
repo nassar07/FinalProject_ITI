@@ -7,7 +7,7 @@ using NetTopologySuite.Geometries;
 namespace FinalProject_ITI.Migrations
 {
     /// <inheritdoc />
-    public partial class init : Migration
+    public partial class Init : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -78,7 +78,8 @@ namespace FinalProject_ITI.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Embedding = table.Column<Point>(type: "geography", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -230,6 +231,7 @@ namespace FinalProject_ITI.Migrations
                     PaymentMethod = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     TotalAmount = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
                     OrderTypeID = table.Column<int>(type: "int", nullable: true),
+                    Embedding = table.Column<Point>(type: "geography", nullable: true),
                     UserID = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     DeliveryBoyID = table.Column<string>(type: "nvarchar(450)", nullable: true)
                 },
@@ -268,7 +270,8 @@ namespace FinalProject_ITI.Migrations
                     ProfileImage = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CategoryID = table.Column<int>(type: "int", nullable: false),
                     OwnerID = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    SubscribeID = table.Column<int>(type: "int", nullable: true)
+                    SubscribeID = table.Column<int>(type: "int", nullable: true),
+                    Embedding = table.Column<Point>(type: "geography", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -419,6 +422,7 @@ namespace FinalProject_ITI.Migrations
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UserID = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     ProductID = table.Column<int>(type: "int", nullable: false),
+                    Embedding = table.Column<Point>(type: "geography", nullable: true),
                     ApplicationUserId = table.Column<string>(type: "nvarchar(450)", nullable: true)
                 },
                 constraints: table =>

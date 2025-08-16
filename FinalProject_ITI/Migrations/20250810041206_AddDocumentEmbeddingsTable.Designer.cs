@@ -13,8 +13,8 @@ using NetTopologySuite.Geometries;
 namespace FinalProject_ITI.Migrations
 {
     [DbContext(typeof(ITIContext))]
-    [Migration("20250806165636_init")]
-    partial class init
+    [Migration("20250810041206_AddDocumentEmbeddingsTable")]
+    partial class AddDocumentEmbeddingsTable
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -177,6 +177,9 @@ namespace FinalProject_ITI.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<Point>("Embedding")
+                        .HasColumnType("geography");
+
                     b.Property<string>("Image")
                         .HasColumnType("nvarchar(max)");
 
@@ -213,6 +216,9 @@ namespace FinalProject_ITI.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<Point>("Embedding")
+                        .HasColumnType("geography");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -220,6 +226,45 @@ namespace FinalProject_ITI.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Categories");
+                });
+
+            modelBuilder.Entity("FinalProject_ITI.Models.DocumentEmbedding", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Dimension")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("Embedding")
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<string>("EntityId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("DocumentEmbeddings");
                 });
 
             modelBuilder.Entity("FinalProject_ITI.Models.Order", b =>
@@ -232,6 +277,9 @@ namespace FinalProject_ITI.Migrations
 
                     b.Property<string>("DeliveryBoyID")
                         .HasColumnType("nvarchar(450)");
+
+                    b.Property<Point>("Embedding")
+                        .HasColumnType("geography");
 
                     b.Property<DateTime>("OrderDate")
                         .HasColumnType("datetime2");
@@ -414,6 +462,9 @@ namespace FinalProject_ITI.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<Point>("Embedding")
+                        .HasColumnType("geography");
 
                     b.Property<int>("ProductID")
                         .HasColumnType("int");

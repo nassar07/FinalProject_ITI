@@ -225,6 +225,45 @@ namespace FinalProject_ITI.Migrations
                     b.ToTable("Categories");
                 });
 
+            modelBuilder.Entity("FinalProject_ITI.Models.DocumentEmbedding", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Dimension")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("Embedding")
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<string>("EntityId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("DocumentEmbeddings");
+                });
+
             modelBuilder.Entity("FinalProject_ITI.Models.Order", b =>
                 {
                     b.Property<int>("Id")
@@ -238,6 +277,12 @@ namespace FinalProject_ITI.Migrations
 
                     b.Property<Point>("Embedding")
                         .HasColumnType("geography");
+
+                    b.Property<bool>("IsCashDeliveredToBrand")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeliveryFeesCollected")
+                        .HasColumnType("bit");
 
                     b.Property<DateTime>("OrderDate")
                         .HasColumnType("datetime2");
@@ -344,8 +389,8 @@ namespace FinalProject_ITI.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<long>("Total")
-                        .HasColumnType("bigint");
+                    b.Property<decimal>("Total")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("TransactionReference")
                         .IsRequired()
@@ -377,7 +422,6 @@ namespace FinalProject_ITI.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<Point>("Embedding")
-                        .IsRequired()
                         .HasColumnType("geography");
 
                     b.Property<string>("Image")

@@ -13,8 +13,8 @@ using NetTopologySuite.Geometries;
 namespace FinalProject_ITI.Migrations
 {
     [DbContext(typeof(ITIContext))]
-    [Migration("20250806192116_AddEmbeddingsToAllModels")]
-    partial class AddEmbeddingsToAllModels
+    [Migration("20250808203419_InitDecimal")]
+    partial class InitDecimal
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -347,8 +347,8 @@ namespace FinalProject_ITI.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<long>("Total")
-                        .HasColumnType("bigint");
+                    b.Property<decimal>("Total")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("TransactionReference")
                         .IsRequired()
@@ -380,7 +380,6 @@ namespace FinalProject_ITI.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<Point>("Embedding")
-                        .IsRequired()
                         .HasColumnType("geography");
 
                     b.Property<string>("Image")

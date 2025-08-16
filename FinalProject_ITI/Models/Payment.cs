@@ -7,8 +7,7 @@ public class Payment
     public string PaymentStatus { get; set; }
     public DateTime PaymentDate { get; set; }
     public string TransactionReference { get; set; }
-    public long Total { get; set; }
-
+    public decimal Total { get; set; }
     public int OrderID { get; set; }
-    public Order Order { get; set; }
+    public Order? Order { get; set; }
 }

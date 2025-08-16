@@ -1,4 +1,5 @@
-﻿using FinalProject_ITI.Models;
+﻿using FinalProject_ITI.DTO;
+using FinalProject_ITI.Models;
 using FinalProject_ITI.Repositories.Implementations;
 using FinalProject_ITI.Repositories.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -19,7 +20,7 @@ public class BazarBrandController : ControllerBase
         _BazarBrand = BazarBrand;
         _BazarBrandRepository = BazarBrandRepository;
     }
-
+    [AllowAnonymous]
     [HttpPost("AddBrandToBazar/{BazarId}/{BrandId}")]
     public async Task<IActionResult> AddBrandToBazar(int BazarId, int BrandId)
     {
@@ -53,21 +54,35 @@ public class BazarBrandController : ControllerBase
 
         return Ok(new { message = "Brand removed from Bazar." });
     }
-
+    [AllowAnonymous]
     [HttpGet("{bazarId}/brands")]
     public async Task<IActionResult> GetBrandsInBazar(int bazarId)
     {
-        var brands = await _BazarBrand.GetQuery().Where(bb => bb.BazarID == bazarId)
-            .Include(bb => bb.Brand)
-            .Select(bb => new {
-                bb.Brand.Id,
-                bb.Brand.Name,
-                bb.Brand.Description
+        var brands = await _BazarBrand.GetQuery()
+            .Where(bb => bb.BazarID == bazarId)
+            .Include(bb => bb.Brand).ThenInclude(c=>c.Category)
+            .Select(bb => new BrandReadDTO
+            {
+                Id = bb.Brand.Id,
+                Name = bb.Brand.Name,
+                Description = bb.Brand.Description,
+                Address = bb.Brand.Address,
+                ImageFile = bb.Brand.Image,
+                ProfileImage = bb.Brand.ProfileImage,
+                CategoryID = bb.Brand.CategoryID,
+                ProductCount = bb.Brand.Products.Count,
+                CategoryName = bb.Brand.Category.Name,
+                OwnerID = bb.Brand.OwnerID,
+                SubscribeID = bb.Brand.SubscribeID,
+                AverageRating = bb.Brand.Products
+                    .SelectMany(p => p.Reviews)
+                    .Average(r => (double?)r.Rating) ?? 0
             })
             .ToListAsync();
 
         return Ok(brands);
     }
+
 
     [HttpGet("brand/{brandId}/bazars")]
     public async Task<IActionResult> GetBazarsForBrand(int brandId)

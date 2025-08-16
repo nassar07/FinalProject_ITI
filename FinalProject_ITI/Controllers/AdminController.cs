@@ -1,5 +1,6 @@
 ﻿using FinalProject_ITI.DTO;
 using FinalProject_ITI.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -74,6 +75,27 @@ public class AdminController : ControllerBase
         }
 
         return Ok(userDtos);
+    }
+
+    [HttpDelete("{userId}")]
+    public async Task<IActionResult> DeleteUser(string userId)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+            return BadRequest(new { message = "User ID cannot be null or empty." });
+
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null)
+            return NotFound(new { message = "User not found." });
+
+        var result = await _userManager.DeleteAsync(user);
+        if (result.Succeeded)
+            return Ok(new { message = "User deleted successfully." });
+
+        return BadRequest(new
+        {
+            message = "Failed to delete user.",
+            errors = result.Errors.Select(e => e.Description)
+        });
     }
 
 }

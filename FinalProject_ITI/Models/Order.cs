@@ -12,6 +12,8 @@ public class Order
     public int? OrderTypeID { get; set; }
     public GeoPoint? Embedding { get; set; }
     public ICollection<OrderDetail> OrderDetails { get; set; }
+    public bool IsDeliveryFeesCollected { get; set; } = false;
+    public bool IsCashDeliveredToBrand { get; set; } = false;
     public string UserID { get; set; }
     public ApplicationUser? User { get; set; }
     public string? DeliveryBoyID { get; set; }

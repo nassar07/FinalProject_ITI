@@ -98,7 +98,7 @@ namespace FinalProject_ITI.Controllers
                             new MyToken
                             {
                                 token = new JwtSecurityTokenHandler().WriteToken(myToken),
-                                expiration = DateTime.Now.AddHours(1)
+                                expiration = myToken.ValidTo
                             });
                    }
 
