@@ -1,7 +1,11 @@
-﻿using FinalProject_ITI.Services;
-using Microsoft.AspNetCore.Http;
+﻿using FinalProject_ITI.Models;
+using FinalProject_ITI.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Mscc.GenerativeAI;
+using System.Net.Http.Headers;
+using System.Text;
+using System.Text.Json;
 
 namespace FinalProject_ITI.Controllers
 {
@@ -12,18 +16,16 @@ namespace FinalProject_ITI.Controllers
         private readonly EmbeddingService _embeddingService;
         private readonly GoogleAI _googleAI;
         private readonly ILogger<ChatController> _logger;
+        private const int CharBudget = 3500;
 
-        public ChatController(EmbeddingService embeddingService, IConfiguration configuration, ILogger<ChatController> logger)
+        private const string GeminiKey = "<GEMINI_KEY>";
+        private const string DeepSeekKey = "sk-2a161dea47ca4cc79d35759e4155e701";
+
+        public ChatController(EmbeddingService embeddingService, GoogleAI googleAI, ILogger<ChatController> logger)
         {
             _embeddingService = embeddingService;
+            _googleAI = googleAI;
             _logger = logger;
-            var apiKey = configuration["Gemini:ApiKey"];
-            if (string.IsNullOrEmpty(apiKey))
-            {
-                _logger.LogError("Gemini API Key is not configured");
-                throw new InvalidOperationException("Gemini API Key is not configured");
-            }
-            _googleAI = new GoogleAI(apiKey);
         }
 
         [HttpPost("ask")]
@@ -31,73 +33,125 @@ namespace FinalProject_ITI.Controllers
         {
             try
             {
-                _logger.LogInformation("Processing chat request: {Question}", request.Question);
+                _logger.LogInformation("Processing chat question: {Q}", request.Question);
 
-                var context = await _embeddingService.FindMostRelevantContext(request.Question);
-                var prompt = $"You are an AI assistant. Answer the user's question based ONLY on the provided context.\n\nCONTEXT:\n{context}\n\nQUESTION: {request.Question}\n\nANSWER:";
+                var chunks = await _embeddingService.GetTopKContextChunksAsync(request.Question, k: 8);
+                var sources = new List<string>();
 
-                _logger.LogInformation("Using model:gemini-1.5-flash");
-                var generativeModel = _googleAI.GenerativeModel(model: "gemini-1.5-flash");
-                var response = await generativeModel.GenerateContent(prompt);
+                string prompt;
+                if (chunks != null && chunks.Any())
+                {
+                    var sb = new StringBuilder();
+                    foreach (var c in chunks.OrderByDescending(x => x.Score))
+                    {
+                        if (sb.Length + c.Text.Length + 200 > CharBudget) break;
+                        sb.AppendLine($"[Source: {c.Source}] (score: {c.Score:F3})");
+                        sb.AppendLine(c.Text);
+                        sb.AppendLine();
+                        if (!sources.Contains(c.Source)) sources.Add(c.Source);
+                    }
+                    prompt = BuildPromptWithContext(sb.ToString(), request.Question);
+                }
+                else
+                {
+                    prompt = BuildPromptForNoContext(request.Question);
+                }
 
-                _logger.LogInformation("Successfully generated response");
-                return Ok(new { Answer = response.Text });
+                // جرّب Gemini أولاً
+                try
+                {
+                    var answer = await AskGemini(prompt);
+                    return Ok(new { Answer = answer, Sources = sources });
+                }
+                catch (HttpRequestException ex) when (ex.Message.Contains("402") || ex.Message.Contains("quota"))
+                {
+                    _logger.LogWarning("Gemini quota ended. Switching to DeepSeek...");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Gemini failed, switching to DeepSeek...");
+                }
+
+                // جرّب DeepSeek
+                var deepSeekAnswer = await AskDeepSeek(prompt);
+                return Ok(new { Answer = deepSeekAnswer, Sources = sources });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error processing chat request");
-                return StatusCode(500, new { Error = "An error occurred while processing your request", Details = ex.Message });
+                _logger.LogError(ex, "Error in Ask");
+                return StatusCode(500, new { Error = "حدث خطأ أثناء المعالجة", Details = ex.Message });
             }
         }
 
-        [HttpPost("index-data")]
-        public async Task<IActionResult> IndexData()
+        private async Task<string> AskGemini(string prompt)
         {
-            try
-            {
-                await _embeddingService.IndexAllProducts();
-                return Ok("Indexing completed.");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error during indexing");
-                return StatusCode(500, new { Error = "An error occurred during indexing", Details = ex.Message });
-            }
+            var model = _googleAI.GenerativeModel(model: "gemini-1.5-flash");
+            var resp = await model.GenerateContent(prompt);
+            return resp.Text;
         }
 
-        [HttpPost("index-all-data")]
-        public async Task<IActionResult> IndexAllData()
+        private async Task<string> AskDeepSeek(string prompt)
         {
-            try
+            using var httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", DeepSeekKey);
+
+            var body = new
             {
-                _logger.LogInformation("Starting comprehensive data indexing");
-                await _embeddingService.IndexAllData();
-                return Ok("Comprehensive data indexing completed successfully.");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error during comprehensive indexing");
-                return StatusCode(500, new { Error = "An error occurred during comprehensive indexing", Details = ex.Message });
-            }
+                model = "deepseek-chat",
+                messages = new[]
+                {
+                    new { role = "system", content = "أنت مساعد ذكي ويجب أن تجيب باللغة العربية فقط." },
+                    new { role = "user", content = prompt }
+                }
+            };
+
+            var json = JsonSerializer.Serialize(body);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            var response = await httpClient.PostAsync("https://api.deepseek.com/v1/chat/completions", content);
+            response.EnsureSuccessStatusCode();
+
+            var respJson = await response.Content.ReadAsStringAsync();
+            using var doc = JsonDocument.Parse(respJson);
+
+            return doc.RootElement
+                      .GetProperty("choices")[0]
+                      .GetProperty("message")
+                      .GetProperty("content")
+                      .GetString();
         }
 
-        [HttpGet("test-api")]
-        public async Task<IActionResult> TestApi()
+        private string BuildPromptWithContext(string context, string question)
         {
-            try
-            {
-                _logger.LogInformation("Testing Gemini API connection");
-                var generativeModel = _googleAI.GenerativeModel(model: "gemini-1.5-flash");
-                var response = await generativeModel.GenerateContent("Hello, this is a test message.");
-                return Ok(new { Success = true, Response = response.Text });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "API test failed");
-                return StatusCode(500, new { Error = "API test failed", Details = ex.Message });
-            }
+            var sb = new StringBuilder();
+            sb.AppendLine("You are a helpful assistant that MUST answer in Arabic.");
+            sb.AppendLine("Use ONLY the provided CONTEXT to answer the user's question. Do not invent facts. If the answer is not present in the context, respond: \"لا توجد معلومات كافية في المصادر\".");
+            sb.AppendLine("When you use information from the context, mention the source in square brackets like: [المصدر: <source>].");
+            sb.AppendLine();
+            sb.AppendLine("CONTEXT:");
+            sb.AppendLine(context);
+            sb.AppendLine();
+            sb.AppendLine($"USER QUESTION: {question}");
+            sb.AppendLine();
+            sb.AppendLine("ANSWER:");
+            return sb.ToString();
+        }
+
+        private string BuildPromptForNoContext(string question)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine("You are a helpful assistant that MUST answer in Arabic.");
+            sb.AppendLine("Be honest: if you don't know the answer, say \"لا توجد معلومات كافية\".");
+            sb.AppendLine();
+            sb.AppendLine($"USER QUESTION: {question}");
+            sb.AppendLine();
+            sb.AppendLine("ANSWER:");
+            return sb.ToString();
         }
     }
 
-    public class ChatRequest { public string Question { get; set; } = string.Empty; }
+    public class ChatRequest
+    {
+        public string Question { get; set; } = string.Empty;
+    }
 }

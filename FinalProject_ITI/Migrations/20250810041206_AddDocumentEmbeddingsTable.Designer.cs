@@ -4,6 +4,7 @@ using FinalProject_ITI.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NetTopologySuite.Geometries;
 
@@ -12,9 +13,11 @@ using NetTopologySuite.Geometries;
 namespace FinalProject_ITI.Migrations
 {
     [DbContext(typeof(ITIContext))]
-    partial class ITIContextModelSnapshot : ModelSnapshot
+    [Migration("20250810041206_AddDocumentEmbeddingsTable")]
+    partial class AddDocumentEmbeddingsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -278,12 +281,6 @@ namespace FinalProject_ITI.Migrations
                     b.Property<Point>("Embedding")
                         .HasColumnType("geography");
 
-                    b.Property<bool>("IsCashDeliveredToBrand")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDeliveryFeesCollected")
-                        .HasColumnType("bit");
-
                     b.Property<DateTime>("OrderDate")
                         .HasColumnType("datetime2");
 
@@ -389,8 +386,8 @@ namespace FinalProject_ITI.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<decimal>("Total")
-                        .HasColumnType("decimal(18,2)");
+                    b.Property<long>("Total")
+                        .HasColumnType("bigint");
 
                     b.Property<string>("TransactionReference")
                         .IsRequired()
@@ -422,6 +419,7 @@ namespace FinalProject_ITI.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<Point>("Embedding")
+                        .IsRequired()
                         .HasColumnType("geography");
 
                     b.Property<string>("Image")

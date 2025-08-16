@@ -4,6 +4,7 @@ using FinalProject_ITI.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NetTopologySuite.Geometries;
 
@@ -12,9 +13,11 @@ using NetTopologySuite.Geometries;
 namespace FinalProject_ITI.Migrations
 {
     [DbContext(typeof(ITIContext))]
-    partial class ITIContextModelSnapshot : ModelSnapshot
+    [Migration("20250814121442_AddBazarRegistrationPayment")]
+    partial class AddBazarRegistrationPayment
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -155,6 +158,51 @@ namespace FinalProject_ITI.Migrations
                         .IsUnique();
 
                     b.ToTable("BazarBrands");
+                });
+
+            modelBuilder.Entity("FinalProject_ITI.Models.BazarRegistrationPayment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("BazarID")
+                        .HasColumnType("int");
+
+                    b.Property<int>("BrandID")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("PaymentDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("PaymentMethod")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PaymentStatus")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TransactionReference")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BazarID");
+
+                    b.HasIndex("BrandID");
+
+                    b.ToTable("BazarRegistrationPayments");
                 });
 
             modelBuilder.Entity("FinalProject_ITI.Models.Brand", b =>
@@ -656,6 +704,25 @@ namespace FinalProject_ITI.Migrations
 
                     b.HasOne("FinalProject_ITI.Models.Brand", "Brand")
                         .WithMany("BazarBrands")
+                        .HasForeignKey("BrandID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Bazar");
+
+                    b.Navigation("Brand");
+                });
+
+            modelBuilder.Entity("FinalProject_ITI.Models.BazarRegistrationPayment", b =>
+                {
+                    b.HasOne("FinalProject_ITI.Models.Bazar", "Bazar")
+                        .WithMany()
+                        .HasForeignKey("BazarID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FinalProject_ITI.Models.Brand", "Brand")
+                        .WithMany()
                         .HasForeignKey("BrandID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();

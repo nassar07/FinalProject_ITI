@@ -19,6 +19,8 @@ public class ITIContext : IdentityDbContext<ApplicationUser>
     public DbSet<Brand> Brands { get; set; }
     public DbSet<OrderType> OrderTypes { get; set; }
     public DbSet<OrderDetail> OrderDetails { get; set; }
+    public DbSet<DocumentEmbedding> DocumentEmbeddings { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
